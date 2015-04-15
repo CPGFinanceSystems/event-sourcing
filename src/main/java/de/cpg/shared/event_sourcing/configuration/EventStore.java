@@ -3,7 +3,6 @@ package de.cpg.shared.event_sourcing.configuration;
 import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.shared.event_sourcing.service.CommandBus;
 import de.cpg.shared.event_sourcing.service.CommandBusImpl;
 import de.cpg.shared.event_sourcing.service.EventBus;
@@ -35,37 +34,23 @@ public class EventStore {
     private int port;
 
     @Bean
-    public ActorSystem actorSystem() {
+    public ActorSystem _actorSystem() {
         return ActorSystem.create();
     }
 
     @Bean
-    public Settings settings() {
-        return new SettingsBuilder()
+    public EsConnection _esConnection(final ActorSystem system) {
+        final Settings settings = new SettingsBuilder()
                 .address(new InetSocketAddress(hostname, port))
                 .defaultCredentials(new UserCredentials(username, password))
                 .build();
-    }
 
-    @Bean
-    public EsConnection esConnection(final ActorSystem system, final Settings settings) {
         return EsConnectionFactory.create(system, settings);
-
     }
 
     @Bean
-    public StringArgGenerator uuidGenerator() {
-        return Generators.nameBasedGenerator();
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
-
-    @Bean
-    public CommandBus commandBus(final ObjectMapper objectMapper, final StringArgGenerator uuidGenerator, final EsConnection esConnection) {
-        return new CommandBusImpl(objectMapper, uuidGenerator, esConnection);
+    public CommandBus commandBus(final EsConnection esConnection) {
+        return new CommandBusImpl(new ObjectMapper(), Generators.nameBasedGenerator(), esConnection);
     }
 
     @Bean
