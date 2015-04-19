@@ -5,10 +5,7 @@ import akka.dispatch.OnComplete;
 import com.google.protobuf.MessageLite;
 import de.cpg.shared.event_sourcing.domain.AggregateRoot;
 import de.cpg.shared.event_sourcing.event.EventHandler;
-import eventstore.EventData;
-import eventstore.EventNumber;
-import eventstore.SubscriptionObserver;
-import eventstore.WriteResult;
+import eventstore.*;
 import eventstore.j.EsConnection;
 import eventstore.j.EventDataBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -56,8 +53,37 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public <T extends MessageLite> void subscribeTo(Class<T> eventClass, EventHandler<T> handler) {
-        final String streamId = "$et-".concat(eventClass.getSimpleName());
-        esConnection.subscribeToStream(streamId, new SubscriptionObserver<eventstore.Event>() {
+        final String streamId = streamIdOf(eventClass);
+        esConnection.subscribeToStream(streamId, asSubscriptionObserver(eventClass, handler), false, null);
+        log.info("Subscribed to stream {}", streamId);
+    }
+
+    @Override
+    public <T extends MessageLite> void subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber) {
+        final String streamId = streamIdOf(eventClass);
+        esConnection.subscribeToStreamFrom(streamId, asSubscriptionObserver(eventClass, handler), sequenceNumber, false, null);
+        log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
+    }
+
+    @Override
+    public void awaitTermination() {
+        actorSystem.awaitTermination();
+    }
+
+    private static String eventStreamFor(final AggregateRoot aggregateRoot) {
+        return AggregateRoot.class.getSimpleName()
+                .concat("-")
+                .concat(aggregateRoot.getClass().getSimpleName())
+                .concat("-")
+                .concat(aggregateRoot.id().toString());
+    }
+
+    private static <T extends MessageLite> String streamIdOf(final Class<T> eventClass) {
+        return "$et-".concat(eventClass.getSimpleName());
+    }
+
+    private <T extends MessageLite> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(Class<T> eventClass, EventHandler<T> handler) {
+        return new SubscriptionObserver<Event>() {
             @Override
             public void onLiveProcessingStart(Closeable closeable) {
                 log.info("Live processing start");
@@ -97,16 +123,6 @@ public class EventBusImpl implements EventBus {
             public void onClose() {
                 log.info("Close");
             }
-        }, false, null);
-
-        log.info("Subscribed to stream {}", streamId);
-    }
-
-    private static String eventStreamFor(final AggregateRoot aggregateRoot) {
-        return AggregateRoot.class.getSimpleName()
-                .concat("-")
-                .concat(aggregateRoot.getClass().getSimpleName())
-                .concat("-")
-                .concat(aggregateRoot.id().toString());
+        };
     }
 }

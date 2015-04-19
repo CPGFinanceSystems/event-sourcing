@@ -12,4 +12,8 @@ public interface EventBus {
     Optional<UUID> publish(MessageLite event, AggregateRoot aggregateRoot);
 
     <T extends MessageLite> void subscribeTo(Class<T> eventClass, EventHandler<T> handler);
+
+    <T extends MessageLite> void subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber);
+
+    void awaitTermination();
 }
