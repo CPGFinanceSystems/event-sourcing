@@ -1,6 +1,9 @@
 package de.cpg.shared.event_sourcing.service;
 
 import akka.actor.ActorSystem;
+import scala.concurrent.duration.Duration;
+
+import java.util.concurrent.TimeUnit;
 
 public class BusControllerImpl implements BusController {
 
@@ -13,6 +16,15 @@ public class BusControllerImpl implements BusController {
     @Override
     public void shutdown() {
         actorSystem.shutdown();
+    }
+
+    @Override
+    public void awaitTermination() {
         actorSystem.awaitTermination();
+    }
+
+    @Override
+    public void awaitTermination(long timeout, TimeUnit timeUnit) {
+        actorSystem.awaitTermination(Duration.create(timeout, timeUnit));
     }
 }
