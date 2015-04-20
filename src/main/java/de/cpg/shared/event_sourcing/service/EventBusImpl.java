@@ -65,11 +65,6 @@ public class EventBusImpl implements EventBus {
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
     }
 
-    @Override
-    public void awaitTermination() {
-        actorSystem.awaitTermination();
-    }
-
     private static String eventStreamFor(final AggregateRoot aggregateRoot) {
         return AggregateRoot.class.getSimpleName()
                 .concat("-")

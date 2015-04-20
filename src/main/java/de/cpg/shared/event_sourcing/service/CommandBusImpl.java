@@ -1,5 +1,6 @@
 package de.cpg.shared.event_sourcing.service;
 
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.StringArgGenerator;
@@ -79,6 +80,17 @@ public class CommandBusImpl implements CommandBus {
                 sequenceNumber,
                 false,
                 null);
+    }
+
+    @Override
+    public <T extends Command> boolean deleteQueueFor(Class<T> commandClass) {
+        try {
+            Await.result(esConnection.deleteStream(queueNameFor(commandClass), null, false, null), Duration.Inf());
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return false;
+        }
     }
 
     private <T extends Command> SubscriptionObserver<Event> asObserver(final CommandHandler<T> handler, final Class<T> commandClass) {

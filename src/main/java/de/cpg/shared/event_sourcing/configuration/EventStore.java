@@ -3,10 +3,7 @@ package de.cpg.shared.event_sourcing.configuration;
 import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
-import de.cpg.shared.event_sourcing.service.CommandBus;
-import de.cpg.shared.event_sourcing.service.CommandBusImpl;
-import de.cpg.shared.event_sourcing.service.EventBus;
-import de.cpg.shared.event_sourcing.service.EventBusImpl;
+import de.cpg.shared.event_sourcing.service.*;
 import eventstore.Settings;
 import eventstore.UserCredentials;
 import eventstore.j.EsConnection;
@@ -56,5 +53,10 @@ public class EventStore {
     @Bean
     public EventBus eventBus(final EsConnection esConnection, final ActorSystem actorSystem) {
         return new EventBusImpl(esConnection, actorSystem);
+    }
+
+    @Bean
+    public BusController busController(final ActorSystem actorSystem) {
+        return new BusControllerImpl(actorSystem);
     }
 }

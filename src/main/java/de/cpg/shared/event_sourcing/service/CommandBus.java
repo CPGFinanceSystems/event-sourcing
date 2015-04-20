@@ -14,4 +14,6 @@ public interface CommandBus {
     <T extends Command> Closeable subscribeTo(Class<T> commandClass, CommandHandler<T> handler);
 
     <T extends Command> Closeable subscribeToStartingFrom(Class<T> commandClass, CommandHandler<T> handler, int sequenceNumber);
+
+    <T extends Command> boolean deleteQueueFor(Class<T> commandClass);
 }

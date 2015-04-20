@@ -10,12 +10,12 @@ import lombok.Value;
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = TestCommand.Builder.class)
 public class TestCommand implements Command {
-    private final String testData;
+    private final String uniqueKey;
 
 
     @Override
     public String uniqueKey() {
-        return testData;
+        return uniqueKey;
     }
 
     @JsonPOJOBuilder(withPrefix = "")
