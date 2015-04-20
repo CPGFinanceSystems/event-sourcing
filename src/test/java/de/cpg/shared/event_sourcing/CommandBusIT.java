@@ -3,17 +3,12 @@ package de.cpg.shared.event_sourcing;
 import de.cpg.shared.event_sourcing.command.Command;
 import de.cpg.shared.event_sourcing.command.CommandHandler;
 import de.cpg.shared.event_sourcing.configuration.EventStore;
-import de.cpg.shared.event_sourcing.service.BusController;
 import de.cpg.shared.event_sourcing.service.CommandBus;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -23,6 +18,7 @@ import java.io.Closeable;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,27 +28,14 @@ import static org.junit.Assert.fail;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {TestContext.class, EventStore.class})
 @TestExecutionListeners(listeners = DependencyInjectionTestExecutionListener.class)
-public class CommandBusIT implements ApplicationContextAware {
-
-    private static ApplicationContext applicationContext;
-    private final Object semaphore = new Object();
+public class CommandBusIT {
 
     @Autowired
     private CommandBus commandBus;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        CommandBusIT.applicationContext = applicationContext;
-    }
-
     @Before
     public void cleanup() {
         commandBus.deleteQueueFor(TestCommand.class);
-    }
-
-    @AfterClass
-    public static void shutdown() {
-        applicationContext.getBeansOfType(BusController.class).entrySet().iterator().next().getValue().shutdown();
     }
 
     @Test
@@ -70,6 +53,7 @@ public class CommandBusIT implements ApplicationContextAware {
 
     @Test
     public void testPublishAndSubscribe() throws Exception {
+        final AtomicBoolean condition = new AtomicBoolean();
         final String uniqueKey = UUID.randomUUID().toString();
 
         final CommandHandler<TestCommand> commandHandler = new CommandHandler<TestCommand>() {
@@ -80,8 +64,9 @@ public class CommandBusIT implements ApplicationContextAware {
                 assertThat(command.uniqueKey()).isEqualTo(uniqueKey);
                 assertThat(commandId).isNotNull();
                 assertThat(sequenceNumber).isGreaterThanOrEqualTo(0);
-                synchronized (semaphore) {
-                    semaphore.notify();
+                synchronized (condition) {
+                    condition.set(true);
+                    condition.notify();
                 }
             }
 
@@ -98,14 +83,18 @@ public class CommandBusIT implements ApplicationContextAware {
             assertThat(commandId).isPresent();
             log.info("Published command {} with ID {}", command, commandId.get());
 
-            synchronized (semaphore) {
-                semaphore.wait(TimeUnit.SECONDS.toMillis(2));
+            synchronized (condition) {
+                condition.wait(TimeUnit.SECONDS.toMillis(2));
+                if (!condition.get()) {
+                    fail("Timeout waiting for expected commands!");
+                }
             }
         }
     }
 
     @Test
     public void testPublishAndSubscribeStartingFrom() throws Exception {
+        final AtomicBoolean condition = new AtomicBoolean();
         final int expectedCommandCount = 3;
         for (int i = 0; i < expectedCommandCount; i++) {
             assertThat(commandBus.publish(new TestCommand(UUID.randomUUID().toString()))).isPresent();
@@ -118,9 +107,10 @@ public class CommandBusIT implements ApplicationContextAware {
             public void handle(TestCommand command, UUID commandId, int sequenceNumber) throws Exception {
                 log.info("Got command {} with sequence number {}", command, sequenceNumber);
                 int count = commandCounter.incrementAndGet();
-                synchronized (semaphore) {
+                synchronized (condition) {
                     if (expectedCommandCount == count) {
-                        semaphore.notify();
+                        condition.set(true);
+                        condition.notify();
                     }
                 }
             }
@@ -132,8 +122,11 @@ public class CommandBusIT implements ApplicationContextAware {
         };
 
         try (Closeable ignored = commandBus.subscribeToStartingFrom(TestCommand.class, commandHandler, 0)) {
-            synchronized (semaphore) {
-                semaphore.wait(TimeUnit.SECONDS.toMillis(2));
+            synchronized (condition) {
+                condition.wait(TimeUnit.SECONDS.toMillis(2));
+                if (!condition.get()) {
+                    fail("Timeout waiting for expected commands!");
+                }
             }
         }
     }

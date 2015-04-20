@@ -1,0 +1,5 @@
+package de.cpg.shared.event_sourcing;
+
+message TestEvent {
+    required string testData = 1;
+}

@@ -33,10 +33,10 @@ public class EventBusImpl implements EventBus {
     @Override
     public Optional<UUID> publish(MessageLite event, AggregateRoot aggregateRoot) {
         final UUID eventId = UUID.randomUUID();
-        final String eventName = event.getClass().getSimpleName();
+        final String eventType = event.getClass().getSimpleName();
         final byte[] bytes = event.toByteArray();
-        log.debug("Generated UUID {} for {}", eventId, eventName);
-        final EventData eventData = new EventDataBuilder(eventName)
+        log.debug("Generated UUID {} for {}", eventId, eventType);
+        final EventData eventData = new EventDataBuilder(eventType)
                 .data(bytes)
                 .eventId(eventId).build();
 
@@ -52,17 +52,17 @@ public class EventBusImpl implements EventBus {
     }
 
     @Override
-    public <T extends MessageLite> void subscribeTo(Class<T> eventClass, EventHandler<T> handler) {
+    public <T extends MessageLite> Closeable subscribeTo(Class<T> eventClass, EventHandler<T> handler) {
         final String streamId = streamIdOf(eventClass);
-        esConnection.subscribeToStream(streamId, asSubscriptionObserver(eventClass, handler), false, null);
         log.info("Subscribed to stream {}", streamId);
+        return esConnection.subscribeToStream(streamId, asSubscriptionObserver(eventClass, handler), false, null);
     }
 
     @Override
-    public <T extends MessageLite> void subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber) {
+    public <T extends MessageLite> Closeable subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber) {
         final String streamId = streamIdOf(eventClass);
-        esConnection.subscribeToStreamFrom(streamId, asSubscriptionObserver(eventClass, handler), sequenceNumber, false, null);
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
+        return esConnection.subscribeToStreamFrom(streamId, asSubscriptionObserver(eventClass, handler), sequenceNumber, false, null);
     }
 
     private static String eventStreamFor(final AggregateRoot aggregateRoot) {
