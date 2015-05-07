@@ -46,11 +46,6 @@
             <version>${uuid-generator.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${protobuf.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
@@ -85,25 +80,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.google.protobuf.tools</groupId>
-                <artifactId>maven-protoc-plugin</artifactId>
-                <version>0.1.10</version>
-                <executions>
-                    <execution>
-                        <id>generate-proto-java</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
     <profiles>
         <profile>

@@ -38,10 +38,10 @@ public class EventBusIT {
         final AtomicBoolean condition = new AtomicBoolean();
         final String testData = "test data";
 
-        final EventHandler<TestData.TestEvent> eventHandler = new EventHandler<TestData.TestEvent>() {
+        final EventHandler<TestEvent> eventHandler = new EventHandler<TestEvent>() {
 
             @Override
-            public void handle(TestData.TestEvent event, UUID eventId, int sequenceNumber) throws Exception {
+            public void handle(TestEvent event, UUID eventId, int sequenceNumber) throws Exception {
                 log.info("Got event {} with ID {} and sequence number {}", event, eventId, sequenceNumber);
                 assertThat(event.getTestData()).isEqualTo(testData);
                 assertThat(eventId).isNotNull();
@@ -59,8 +59,8 @@ public class EventBusIT {
         };
 
 
-        try (Closeable ignored = eventBus.subscribeTo(TestData.TestEvent.class, eventHandler)) {
-            final TestData.TestEvent event = TestData.TestEvent.newBuilder().setTestData(testData).build();
+        try (Closeable ignored = eventBus.subscribeTo(TestEvent.class, eventHandler)) {
+            final TestEvent event = TestEvent.builder().testData(testData).build();
             final Optional<UUID> eventId = eventBus.publish(event, domainObject);
             assertThat(eventId).isPresent();
             log.info("Published {} with ID {}", event.getClass().getSimpleName(), eventId.get());
@@ -80,15 +80,15 @@ public class EventBusIT {
 
         final int expectedEventCount = 3;
         for (int i = 0; i < expectedEventCount; i++) {
-            final TestData.TestEvent event = TestData.TestEvent.newBuilder().setTestData("event " + i).build();
+            final TestEvent event = TestEvent.builder().testData("event " + i).build();
             assertThat(eventBus.publish(event, domainObject)).isPresent();
         }
 
-        final EventHandler<TestData.TestEvent> eventHandler = new EventHandler<TestData.TestEvent>() {
+        final EventHandler<TestEvent> eventHandler = new EventHandler<TestEvent>() {
             final AtomicInteger eventCounter = new AtomicInteger();
 
             @Override
-            public void handle(TestData.TestEvent event, UUID eventId, int sequenceNumber) throws Exception {
+            public void handle(TestEvent event, UUID eventId, int sequenceNumber) throws Exception {
                 log.info("Got event {} with sequence number {}", event, sequenceNumber);
                 int count = eventCounter.incrementAndGet();
                 synchronized (condition) {
@@ -105,7 +105,7 @@ public class EventBusIT {
             }
         };
 
-        try (Closeable ignored = eventBus.subscribeToStartingFrom(TestData.TestEvent.class, eventHandler, 0)) {
+        try (Closeable ignored = eventBus.subscribeToStartingFrom(TestEvent.class, eventHandler, 0)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(2));
                 if (!condition.get()) {

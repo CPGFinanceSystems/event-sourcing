@@ -30,6 +30,9 @@ public class EventStore {
     @Value("${eventstore.port:1113}")
     private int port;
 
+    @Value("${eventstore.repository.max-events-to-load:100}")
+    private int maxEventsToLoad;
+
     @Bean
     public ActorSystem _actorSystem() {
         return ActorSystem.create();
@@ -52,11 +55,16 @@ public class EventStore {
 
     @Bean
     public EventBus eventBus(final EsConnection esConnection, final ActorSystem actorSystem) {
-        return new EventBusImpl(esConnection, actorSystem);
+        return new EventBusImpl(esConnection, actorSystem, new ObjectMapper());
     }
 
     @Bean
     public BusController busController(final ActorSystem actorSystem) {
         return new BusControllerImpl(actorSystem);
+    }
+
+    @Bean
+    public DomainRepository domainRepository(final EsConnection esConnection) {
+        return new DomainRepositoryImpl(esConnection, new ObjectMapper(), maxEventsToLoad);
     }
 }
