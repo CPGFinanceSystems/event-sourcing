@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = TestDomainObjectCreated.Builder.class)
 public class TestDomainObjectCreated implements Event {
-    final UUID id;
+    private final UUID id;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {}

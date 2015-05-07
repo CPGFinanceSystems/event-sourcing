@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -27,7 +28,7 @@ public class DomainRepositoryImpl implements DomainRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends AggregateRoot> T findById(Class<T> aggregateRootClass, UUID id) {
+    public <T extends AggregateRoot> Optional<T> findById(Class<T> aggregateRootClass, UUID id) {
         final String streamId = EventUtil.eventStreamFor(aggregateRootClass, id);
 
         try {
@@ -44,13 +45,13 @@ public class DomainRepositoryImpl implements DomainRepository {
                     Event event = objectMapper.readValue(eventJson, (Class<Event>) eventClass);
                     aggregateRoot.apply(event);
                 } catch (Exception e) {
-                    log.error("Could not apply event to domain object", e);
+                    log.warn("Could not apply event to domain object", e);
                 }
             });
-            return aggregateRoot;
+            return Optional.of(aggregateRoot);
         } catch (Exception e) {
             log.error("Could not load domain object", e);
-            return null;
+            return Optional.empty();
         }
     }
 }

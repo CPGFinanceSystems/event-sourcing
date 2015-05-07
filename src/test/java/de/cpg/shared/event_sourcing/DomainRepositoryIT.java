@@ -12,6 +12,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,15 +33,16 @@ public class DomainRepositoryIT {
     @Before
     public void setup() {
         domainId = UUID.randomUUID();
-        TestDomainObject domainObject = new TestDomainObject(domainId);
-        eventBus.publish(new TestDomainObjectCreated(domainId), domainObject);
+        TestDomainObjectCreated createEvent = new TestDomainObjectCreated(domainId);
+        TestDomainObject domainObject = new TestDomainObject(createEvent);
+        eventBus.publish(createEvent, domainObject);
     }
 
     @Test
     public void testFindById() {
-        TestDomainObject domainObject = domainRepository.findById(TestDomainObject.class, domainId);
+        Optional<TestDomainObject> domainObject = domainRepository.findById(TestDomainObject.class, domainId);
 
-        assertThat(domainObject).isNotNull();
-        assertThat(domainObject.id()).isEqualTo(domainId);
+        assertThat(domainObject).isPresent();
+        assertThat(domainObject.get().id()).isEqualTo(domainId);
     }
 }

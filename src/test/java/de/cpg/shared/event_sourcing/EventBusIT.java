@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
 @TestExecutionListeners(listeners = DependencyInjectionTestExecutionListener.class)
 public class EventBusIT {
 
-    private final TestDomainObject domainObject = new TestDomainObject(UUID.randomUUID());
+    private final TestDomainObject domainObject = new TestDomainObject();
 
     @Autowired
     private EventBus eventBus;
