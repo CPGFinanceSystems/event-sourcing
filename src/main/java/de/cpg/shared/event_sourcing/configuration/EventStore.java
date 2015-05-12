@@ -10,6 +10,7 @@ import eventstore.j.EsConnection;
 import eventstore.j.EsConnectionFactory;
 import eventstore.j.SettingsBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -67,4 +68,10 @@ public class EventStore {
     public DomainRepository domainRepository(final EsConnection esConnection) {
         return new DomainRepositoryImpl(esConnection, new ObjectMapper(), maxEventsToLoad);
     }
+
+    @Bean
+    public HealthIndicator eventStoreHealthIndicator(final ActorSystem actorSystem) {
+        return new EventStoreHealthIndicator(actorSystem);
+    }
 }
+
