@@ -3,6 +3,7 @@ package de.cpg.shared.event_sourcing.configuration;
 import akka.actor.ActorSystem;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.Status;
 
 public class EventStoreHealthIndicator implements HealthIndicator {
 
@@ -15,10 +16,11 @@ public class EventStoreHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         if (actorSystem.isTerminated()) {
-            return Health.status("Actor system terminated").down().build();
+            return Health.down().status(Status.DOWN).withDetail("Reason", "Actor system terminated").build();
         }
         return Health.up()
-                .status("Uptime " + actorSystem.uptime() + " seconds")
+                .status(Status.UP)
+                .withDetail("Uptime", actorSystem.uptime())
                 .build();
     }
 }
