@@ -108,7 +108,7 @@ public class EventBusImpl implements EventBus {
                                 onError(throwable);
                             } else {
                                 final T eventData = objectMapper.readValue(event.data().data().value().utf8String(), eventClass);
-                                handler.handle(eventData, event.data().eventId(), event.number().value());
+                                handler.handle(eventData, event.data().eventId(), eventLink.number().value());
                             }
                         }
                     }, actorSystem.dispatcher());
