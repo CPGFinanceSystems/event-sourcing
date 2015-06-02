@@ -1,6 +1,7 @@
 package de.cpg.shared.event_sourcing;
 
 import de.cpg.shared.event_sourcing.configuration.EventStore;
+import de.cpg.shared.event_sourcing.event.AbstractEventHandler;
 import de.cpg.shared.event_sourcing.event.EventHandler;
 import de.cpg.shared.event_sourcing.service.EventBus;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class EventBusIT {
         final AtomicBoolean condition = new AtomicBoolean();
         final String testData = "test data";
 
-        final EventHandler<TestEvent> eventHandler = new EventHandler<TestEvent>() {
+        final EventHandler<TestEvent> eventHandler = new AbstractEventHandler<TestEvent>(TestEvent.class) {
 
             @Override
             public void handle(TestEvent event, UUID eventId, int sequenceNumber) throws Exception {
@@ -84,7 +85,7 @@ public class EventBusIT {
             assertThat(eventBus.publish(event, domainObject)).isPresent();
         }
 
-        final EventHandler<TestEvent> eventHandler = new EventHandler<TestEvent>() {
+        final EventHandler<TestEvent> eventHandler = new AbstractEventHandler<TestEvent>(TestEvent.class) {
             final AtomicInteger eventCounter = new AtomicInteger();
 
             @Override
