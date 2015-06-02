@@ -77,7 +77,7 @@ public class CommandBusImpl implements CommandBus {
         return esConnection.subscribeToStreamFrom(
                 queueNameFor(commandClass),
                 asObserver(handler, commandClass),
-                sequenceNumber,
+                sequenceNumber >= 0 ? sequenceNumber : null,
                 false,
                 null);
     }

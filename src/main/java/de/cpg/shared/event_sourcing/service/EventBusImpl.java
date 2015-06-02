@@ -80,7 +80,12 @@ public class EventBusImpl implements EventBus {
     public <T extends Event> Closeable subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber) {
         final String streamId = streamIdOf(eventClass);
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
-        return esConnection.subscribeToStreamFrom(streamId, asSubscriptionObserver(eventClass, handler), sequenceNumber, false, null);
+        return esConnection.subscribeToStreamFrom(
+                streamId,
+                asSubscriptionObserver(eventClass, handler),
+                sequenceNumber >= 0 ? sequenceNumber : null,
+                false,
+                null);
     }
 
     private static <T extends Event> String streamIdOf(final Class<T> eventClass) {

@@ -121,7 +121,7 @@ public class CommandBusIT {
             }
         };
 
-        try (Closeable ignored = commandBus.subscribeToStartingFrom(TestCommand.class, commandHandler, 0)) {
+        try (Closeable ignored = commandBus.subscribeToStartingFrom(TestCommand.class, commandHandler, -1)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(2));
                 if (!condition.get()) {

@@ -106,7 +106,7 @@ public class EventBusIT {
             }
         };
 
-        try (Closeable ignored = eventBus.subscribeToStartingFrom(TestEvent.class, eventHandler, 0)) {
+        try (Closeable ignored = eventBus.subscribeToStartingFrom(TestEvent.class, eventHandler, -1)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(2));
                 if (!condition.get()) {
