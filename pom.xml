@@ -22,5 +22,6 @@
     <modules>
         <module>event-store-impl</module>
         <module>api</module>
+        <module>mock-impl</module>
     </modules>
 </project>

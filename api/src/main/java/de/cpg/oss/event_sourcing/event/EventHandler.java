@@ -7,5 +7,5 @@ public interface EventHandler<T extends Event> {
 
     void onError(Throwable throwable);
 
-    Class<? extends Event> eventClass();
+    Class<T> eventClass();
 }
