@@ -21,5 +21,6 @@
 
     <modules>
         <module>event-store-impl</module>
+        <module>api</module>
     </modules>
 </project>
