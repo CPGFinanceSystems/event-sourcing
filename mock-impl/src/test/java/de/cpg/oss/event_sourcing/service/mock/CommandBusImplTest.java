@@ -5,7 +5,7 @@ import de.cpg.oss.event_sourcing.service.CommandBus;
 
 public class CommandBusImplTest extends AbstractCommandBusTest {
 
-    private CommandBus commandBus = new CommandBusImpl();
+    private final CommandBus commandBus = new CommandBusImpl();
 
     @Override
     protected CommandBus commandBus() {

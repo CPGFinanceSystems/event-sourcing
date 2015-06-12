@@ -40,7 +40,7 @@ public abstract class AbstractCommandBusTest {
         final CommandHandler<TestCommand> commandHandler = new CommandHandler<TestCommand>() {
 
             @Override
-            public void handle(TestCommand command, UUID commandId, int sequenceNumber) throws Exception {
+            public void handle(final TestCommand command, final UUID commandId, final int sequenceNumber) throws Exception {
                 assertThat(command.uniqueKey()).isEqualTo(uniqueKey);
                 assertThat(commandId).isNotNull();
                 assertThat(sequenceNumber).isGreaterThanOrEqualTo(0);
@@ -51,7 +51,7 @@ public abstract class AbstractCommandBusTest {
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 fail(throwable.getMessage());
             }
         };
@@ -83,8 +83,8 @@ public abstract class AbstractCommandBusTest {
             final AtomicInteger commandCounter = new AtomicInteger();
 
             @Override
-            public void handle(TestCommand command, UUID commandId, int sequenceNumber) throws Exception {
-                int count = commandCounter.incrementAndGet();
+            public void handle(final TestCommand command, final UUID commandId, final int sequenceNumber) throws Exception {
+                final int count = commandCounter.incrementAndGet();
                 synchronized (condition) {
                     if (expectedCommandCount == count) {
                         condition.set(true);
@@ -94,7 +94,7 @@ public abstract class AbstractCommandBusTest {
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 fail(throwable.getMessage());
             }
         };

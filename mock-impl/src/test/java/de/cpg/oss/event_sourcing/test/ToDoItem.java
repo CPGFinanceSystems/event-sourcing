@@ -25,15 +25,15 @@ public class ToDoItem implements AggregateRoot {
     }
 
     @Override
-    public void apply(Event event) {
+    public void apply(final Event event) {
         // Pattern matching for Java would be a nice to have here
         if (event instanceof ToDoItemCreated) {
-            ToDoItemCreated createEvent = (ToDoItemCreated) event;
+            final ToDoItemCreated createEvent = (ToDoItemCreated) event;
             this.id = createEvent.getId();
             this.description = createEvent.getDescription();
             this.done = false;
         } else if (event instanceof ToDoItemDescriptionChanged) {
-            ToDoItemDescriptionChanged changeEvent = (ToDoItemDescriptionChanged) event;
+            final ToDoItemDescriptionChanged changeEvent = (ToDoItemDescriptionChanged) event;
             this.description = changeEvent.getDescription();
         } else if (event instanceof ToDoItemDone) {
             this.done = true;

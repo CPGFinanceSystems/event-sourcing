@@ -26,7 +26,7 @@ public class DomainRepositoryImpl implements DomainRepository {
             final T aggregateRoot = aggregateRootClass.newInstance();
             domainStream.forEach(aggregateRoot::apply);
             return Optional.of(aggregateRoot);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Could not load domain object", e);
         }
         return Optional.empty();

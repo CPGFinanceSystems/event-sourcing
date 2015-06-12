@@ -27,7 +27,7 @@ public abstract class AbstractEventBusTest {
 
         final EventHandler<ToDoItemCreated> eventHandler = new AbstractEventHandler<ToDoItemCreated>(ToDoItemCreated.class) {
             @Override
-            public void handle(ToDoItemCreated event, UUID eventId, int sequenceNumber) throws Exception {
+            public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
                 assertThat(event.getDescription()).isEqualTo(description);
                 assertThat(eventId).isNotNull();
                 assertThat(sequenceNumber).isGreaterThanOrEqualTo(0);
@@ -38,7 +38,7 @@ public abstract class AbstractEventBusTest {
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 fail(throwable.getMessage());
             }
         };
@@ -78,8 +78,8 @@ public abstract class AbstractEventBusTest {
             final AtomicInteger eventCounter = new AtomicInteger();
 
             @Override
-            public void handle(ToDoItemCreated event, UUID eventId, int sequenceNumber) throws Exception {
-                int count = eventCounter.incrementAndGet();
+            public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
+                final int count = eventCounter.incrementAndGet();
                 synchronized (condition) {
                     if (expectedEventCount == count) {
                         condition.set(true);
@@ -89,7 +89,7 @@ public abstract class AbstractEventBusTest {
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 fail(throwable.getMessage());
             }
         };

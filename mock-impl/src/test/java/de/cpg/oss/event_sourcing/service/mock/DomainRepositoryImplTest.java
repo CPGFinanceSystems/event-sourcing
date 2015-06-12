@@ -3,8 +3,6 @@ package de.cpg.oss.event_sourcing.service.mock;
 import de.cpg.oss.event_sourcing.service.AbstractDomainRepositoryTest;
 import de.cpg.oss.event_sourcing.service.DomainRepository;
 import de.cpg.oss.event_sourcing.service.EventBus;
-import de.cpg.oss.event_sourcing.service.mock.DomainRepositoryImpl;
-import de.cpg.oss.event_sourcing.service.mock.EventBusImpl;
 
 public class DomainRepositoryImplTest extends AbstractDomainRepositoryTest {
 
