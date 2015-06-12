@@ -1,4 +1,4 @@
-package de.cpg.oss.event_sourcing;
+package de.cpg.oss.event_sourcing.service;
 
 import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
