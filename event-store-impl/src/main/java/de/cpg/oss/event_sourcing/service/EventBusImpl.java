@@ -31,20 +31,20 @@ public class EventBusImpl implements EventBus {
     private final ActorSystem actorSystem;
     private final ObjectMapper objectMapper;
 
-    public EventBusImpl(EsConnection esConnection, ActorSystem actorSystem, ObjectMapper objectMapper) {
+    public EventBusImpl(final EsConnection esConnection, final ActorSystem actorSystem, final ObjectMapper objectMapper) {
         this.esConnection = esConnection;
         this.actorSystem = actorSystem;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public Optional<UUID> publish(Event event, AggregateRoot aggregateRoot) {
+    public Optional<UUID> publish(final Event event, final AggregateRoot aggregateRoot) {
         final String json;
         final String jsonMetadata;
         try {
             json = objectMapper.writeValueAsString(event);
             jsonMetadata = objectMapper.writeValueAsString(EventMetadata.builder().className(event.getClass().getCanonicalName()).build());
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             log.error("Could not serialize event to JSON", e);
             return Optional.empty();
         }
@@ -63,21 +63,21 @@ public class EventBusImpl implements EventBus {
         try {
             final WriteResult result = Await.result(future, Duration.Inf());
             return null != result ? Optional.of(eventId) : Optional.empty();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Unhandled exception on waiting for result", e);
             return Optional.empty();
         }
     }
 
     @Override
-    public <T extends Event> Closeable subscribeTo(Class<T> eventClass, EventHandler<T> handler) {
+    public <T extends Event> Closeable subscribeTo(final Class<T> eventClass, final EventHandler<T> handler) {
         final String streamId = streamIdOf(eventClass);
         log.info("Subscribed to stream {}", streamId);
         return esConnection.subscribeToStream(streamId, asSubscriptionObserver(eventClass, handler), false, null);
     }
 
     @Override
-    public <T extends Event> Closeable subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber) {
+    public <T extends Event> Closeable subscribeToStartingFrom(final Class<T> eventClass, final EventHandler<T> handler, final int sequenceNumber) {
         final String streamId = streamIdOf(eventClass);
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
         return esConnection.subscribeToStreamFrom(
@@ -92,15 +92,15 @@ public class EventBusImpl implements EventBus {
         return "$et-".concat(eventClass.getSimpleName());
     }
 
-    private <T extends Event> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(Class<T> eventClass, EventHandler<T> handler) {
+    private <T extends Event> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(final Class<T> eventClass, final EventHandler<T> handler) {
         return new SubscriptionObserver<eventstore.Event>() {
             @Override
-            public void onLiveProcessingStart(Closeable closeable) {
+            public void onLiveProcessingStart(final Closeable closeable) {
                 log.info("Live processing start");
             }
 
             @Override
-            public void onEvent(eventstore.Event eventLink, Closeable closeable) {
+            public void onEvent(final eventstore.Event eventLink, final Closeable closeable) {
                 try {
                     final String[] numberAndStream = eventLink.data().data().value().utf8String().split("@");
                     final EventNumber number = new EventNumber.Exact(Integer.valueOf(numberAndStream[0]));
@@ -108,7 +108,7 @@ public class EventBusImpl implements EventBus {
 
                     eventFuture.onComplete(new OnComplete<eventstore.Event>() {
                         @Override
-                        public void onComplete(Throwable throwable, eventstore.Event event) throws Throwable {
+                        public void onComplete(final Throwable throwable, final eventstore.Event event) throws Throwable {
                             if (null != throwable) {
                                 onError(throwable);
                             } else {
@@ -123,7 +123,7 @@ public class EventBusImpl implements EventBus {
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 handler.onError(throwable);
             }
 

@@ -4,7 +4,7 @@ public abstract class AbstractEventHandler<T extends Event> implements EventHand
 
     private final Class<T> eventClass;
 
-    protected AbstractEventHandler(Class<T> eventClass) {
+    protected AbstractEventHandler(final Class<T> eventClass) {
         this.eventClass = eventClass;
     }
 

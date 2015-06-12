@@ -28,19 +28,19 @@ public class CommandBusImpl implements CommandBus {
     private final StringArgGenerator uuidGenerator;
     private final EsConnection esConnection;
 
-    public CommandBusImpl(ObjectMapper objectMapper, StringArgGenerator uuidGenerator, EsConnection esConnection) {
+    public CommandBusImpl(final ObjectMapper objectMapper, final StringArgGenerator uuidGenerator, final EsConnection esConnection) {
         this.objectMapper = objectMapper;
         this.uuidGenerator = uuidGenerator;
         this.esConnection = esConnection;
     }
 
     @Override
-    public Optional<UUID> publish(Command command) {
+    public Optional<UUID> publish(final Command command) {
         final String commandName = command.getClass().getSimpleName();
         final String jsonCommand;
         try {
             jsonCommand = objectMapper.writeValueAsString(command);
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             log.error("Could not convert " + commandName + " to JSON", e);
             return Optional.empty();
         }
@@ -56,14 +56,14 @@ public class CommandBusImpl implements CommandBus {
         try {
             final WriteResult result = Await.result(future, Duration.Inf());
             return null != result ? Optional.of(commandId) : Optional.empty();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Unhandled exception on waiting for result", e);
             return Optional.empty();
         }
     }
 
     @Override
-    public <T extends Command> Closeable subscribeTo(Class<T> commandClass, CommandHandler<T> handler) {
+    public <T extends Command> Closeable subscribeTo(final Class<T> commandClass, final CommandHandler<T> handler) {
         return esConnection.subscribeToStream(
                 queueNameFor(commandClass),
                 asObserver(handler, commandClass),
@@ -72,7 +72,7 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public <T extends Command> Closeable subscribeToStartingFrom(Class<T> commandClass, CommandHandler<T> handler, int sequenceNumber) {
+    public <T extends Command> Closeable subscribeToStartingFrom(final Class<T> commandClass, final CommandHandler<T> handler, final int sequenceNumber) {
         return esConnection.subscribeToStreamFrom(
                 queueNameFor(commandClass),
                 asObserver(handler, commandClass),
@@ -82,11 +82,11 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public <T extends Command> boolean deleteQueueFor(Class<T> commandClass) {
+    public <T extends Command> boolean deleteQueueFor(final Class<T> commandClass) {
         try {
             Await.result(esConnection.deleteStream(queueNameFor(commandClass), null, false, null), Duration.Inf());
             return true;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error(e.getMessage(), e);
             return false;
         }
@@ -95,21 +95,21 @@ public class CommandBusImpl implements CommandBus {
     private <T extends Command> SubscriptionObserver<Event> asObserver(final CommandHandler<T> handler, final Class<T> commandClass) {
         return new SubscriptionObserver<Event>() {
             @Override
-            public void onLiveProcessingStart(Closeable closeable) {
+            public void onLiveProcessingStart(final Closeable closeable) {
             }
 
             @Override
-            public void onEvent(Event event, Closeable closeable) {
+            public void onEvent(final Event event, final Closeable closeable) {
                 try {
                     final T command = objectMapper.readValue(event.data().data().value().utf8String(), commandClass);
                     handler.handle(command, event.data().eventId(), event.number().value());
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     onError(e);
                 }
             }
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(final Throwable throwable) {
                 handler.onError(throwable);
             }
 

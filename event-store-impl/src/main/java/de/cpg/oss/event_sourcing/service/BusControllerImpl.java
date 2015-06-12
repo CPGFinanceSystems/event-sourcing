@@ -9,7 +9,7 @@ public class BusControllerImpl implements BusController {
 
     private final ActorSystem actorSystem;
 
-    public BusControllerImpl(ActorSystem actorSystem) {
+    public BusControllerImpl(final ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
     }
 
@@ -24,7 +24,7 @@ public class BusControllerImpl implements BusController {
     }
 
     @Override
-    public void awaitTermination(long timeout, TimeUnit timeUnit) {
+    public void awaitTermination(final long timeout, final TimeUnit timeUnit) {
         actorSystem.awaitTermination(Duration.create(timeout, timeUnit));
     }
 }

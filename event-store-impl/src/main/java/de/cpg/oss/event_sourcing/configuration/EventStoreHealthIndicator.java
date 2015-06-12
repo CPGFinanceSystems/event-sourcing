@@ -9,7 +9,7 @@ public class EventStoreHealthIndicator implements HealthIndicator {
 
     private final ActorSystem actorSystem;
 
-    public EventStoreHealthIndicator(ActorSystem actorSystem) {
+    public EventStoreHealthIndicator(final ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
     }
 
