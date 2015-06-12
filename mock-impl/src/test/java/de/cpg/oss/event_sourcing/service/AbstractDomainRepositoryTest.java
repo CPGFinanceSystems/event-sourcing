@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public abstract class AbstractDomainRepositoryTest {
 
     protected abstract EventBus eventBus();
+
     protected abstract DomainRepository domainRepository();
 
     @Test

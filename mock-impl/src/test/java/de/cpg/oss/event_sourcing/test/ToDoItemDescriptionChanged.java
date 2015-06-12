@@ -1,10 +1,7 @@
 package de.cpg.oss.event_sourcing.test;
 
 import de.cpg.oss.event_sourcing.event.Event;
-import lombok.Builder;
 import lombok.Value;
-
-import java.util.UUID;
 
 @Value
 public class ToDoItemDescriptionChanged implements Event {

@@ -58,8 +58,7 @@ public class EventBusImpl implements EventBus {
     public <T extends Event> Closeable subscribeToStartingFrom(
             final Class<T> eventClass,
             final EventHandler<T> handler,
-            final int sequenceNumber)
-    {
+            final int sequenceNumber) {
         final String key = eventClass.getSimpleName();
 
         subscriptions.put(key, handler);
@@ -89,8 +88,7 @@ public class EventBusImpl implements EventBus {
             final EventHandler<T> eventHandler,
             final T event,
             final UUID eventId,
-            final int sequenceNumber)
-    {
+            final int sequenceNumber) {
         try {
             log.debug("{}: handle event {} with ID {} and sequence number {}",
                     eventHandler.getClass().getSimpleName(), event, eventId, sequenceNumber);

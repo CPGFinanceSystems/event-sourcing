@@ -5,7 +5,6 @@ import de.cpg.oss.event_sourcing.service.AbstractCommandBusTest;
 import de.cpg.oss.event_sourcing.service.CommandBus;
 import de.cpg.oss.event_sourcing.service.CommandBusImpl;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 
 public class CommandBusIT extends AbstractCommandBusTest {

@@ -62,8 +62,7 @@ public class CommandBusImpl implements CommandBus {
     public <T extends Command> Closeable subscribeToStartingFrom(
             final Class<T> commandClass,
             final CommandHandler<T> handler,
-            final int sequenceNumber)
-    {
+            final int sequenceNumber) {
         final String key = commandClass.getSimpleName();
 
         subscriptions.put(key, handler);
@@ -94,8 +93,7 @@ public class CommandBusImpl implements CommandBus {
             final CommandHandler<T> commandHandler,
             final T command,
             final UUID commandId,
-            final int sequenceNumber)
-    {
+            final int sequenceNumber) {
         try {
             log.debug("{}: handle command {} with ID {} and sequence number {}",
                     commandHandler.getClass().getSimpleName(), command, commandId, sequenceNumber);

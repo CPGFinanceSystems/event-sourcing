@@ -4,7 +4,6 @@ import de.cpg.oss.event_sourcing.domain.AggregateRoot;
 import de.cpg.oss.event_sourcing.event.Event;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
