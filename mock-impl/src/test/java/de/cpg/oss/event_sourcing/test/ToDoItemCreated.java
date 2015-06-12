@@ -1,4 +1,4 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.test;
 
 import de.cpg.oss.event_sourcing.event.Event;
 import lombok.Builder;
@@ -7,9 +7,10 @@ import lombok.Value;
 import java.util.UUID;
 
 @Value
-@Builder(builderClassName = "Builder")
-public class TestDomainObjectCreated implements Event {
+@Builder
+public class ToDoItemCreated implements Event {
     private static final long serialVersionUID = 1L;
 
     private final UUID id;
+    private final String description;
 }

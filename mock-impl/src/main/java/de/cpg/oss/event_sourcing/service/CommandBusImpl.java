@@ -26,7 +26,7 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public Optional<UUID> publish(Command command) {
+    public Optional<UUID> publish(final Command command) {
         final UUID commandId = uuidGenerator.generate(command.uniqueKey());
         final String key = command.getClass().getSimpleName();
 
@@ -34,7 +34,7 @@ public class CommandBusImpl implements CommandBus {
         offsets.putIfAbsent(key, -1);
 
         final List<Command> stream = streams.get(key);
-        int sequenceNumber = stream.size();
+        final int sequenceNumber = stream.size();
 
         if (stream.stream().filter((c) -> c.uniqueKey().equals(command.uniqueKey())).findFirst().isPresent()) {
             log.warn("Ignore duplicated command {}", command);
@@ -48,38 +48,34 @@ public class CommandBusImpl implements CommandBus {
                     .filter((set) -> key.equals(set.getKey()))
                     .map(Map.Entry::getValue)
                     .findFirst()
-                    .ifPresent((commandHandler) -> {
-                        try {
-                            commandHandler.handle(command, commandId, sequenceNumber);
-                        } catch (Exception e) {
-                            commandHandler.onError(e);
-                        }
-                    });
+                    .ifPresent((commandHandler) -> handleCommand(commandHandler, command, commandId, sequenceNumber));
         }
         return Optional.of(commandId);
     }
 
     @Override
-    public <T extends Command> Closeable subscribeTo(Class<T> commandClass, CommandHandler<T> handler) {
+    public <T extends Command> Closeable subscribeTo(final Class<T> commandClass, final CommandHandler<T> handler) {
         return subscribeToStartingFrom(commandClass, handler, -1);
     }
 
     @Override
-    public <T extends Command> Closeable subscribeToStartingFrom(Class<T> commandClass, CommandHandler<T> handler, int sequenceNumber) {
+    public <T extends Command> Closeable subscribeToStartingFrom(
+            final Class<T> commandClass,
+            final CommandHandler<T> handler,
+            final int sequenceNumber)
+    {
         final String key = commandClass.getSimpleName();
 
         subscriptions.put(key, handler);
         offsets.put(key, sequenceNumber);
 
+        log.info("Start subscription for {} with {}", key, handler.getClass().getSimpleName());
+
         Optional.ofNullable(streams.get(key)).ifPresent((stream) -> {
             int counter = 0;
             for (final Command command : stream) {
                 if (counter > sequenceNumber) {
-                    try {
-                        handler.handle((T) command, uuidGenerator.generate(command.uniqueKey()), counter);
-                    } catch (Exception e) {
-                        handler.onError(e);
-                    }
+                    handleCommand(handler, (T) command, uuidGenerator.generate(command.uniqueKey()), counter);
                 }
                 counter++;
             }
@@ -88,9 +84,25 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public <T extends Command> boolean deleteQueueFor(Class<T> commandClass) {
+    public <T extends Command> boolean deleteQueueFor(final Class<T> commandClass) {
         streams.remove(commandClass.getSimpleName());
         offsets.remove(commandClass.getSimpleName());
         return true;
+    }
+
+    private static <T extends Command> void handleCommand(
+            final CommandHandler<T> commandHandler,
+            final T command,
+            final UUID commandId,
+            final int sequenceNumber)
+    {
+        try {
+            log.debug("{}: handle command {} with ID {} and sequence number {}",
+                    commandHandler.getClass().getSimpleName(), command, commandId, sequenceNumber);
+            commandHandler.handle(command, commandId, sequenceNumber);
+        } catch (final Exception e) {
+            log.error("Unknown error in command handler " + commandHandler.getClass().getSimpleName(), e);
+            commandHandler.onError(e);
+        }
     }
 }

@@ -13,20 +13,20 @@ public class DomainRepositoryImpl implements DomainRepository {
 
     private final EventBusImpl eventBus;
 
-    public DomainRepositoryImpl(EventBusImpl eventBus) {
+    public DomainRepositoryImpl(final EventBusImpl eventBus) {
         this.eventBus = eventBus;
     }
 
     @Override
-    public <T extends AggregateRoot> Optional<T> findById(Class<T> aggregateRootClass, UUID id) {
+    public <T extends AggregateRoot> Optional<T> findById(final Class<T> aggregateRootClass, final UUID id) {
         final Stream<Event> domainStream = eventBus.domainStreamOf(aggregateRootClass).stream();
 
         try {
-            T aggregateRoot = aggregateRootClass.newInstance();
+            final T aggregateRoot = aggregateRootClass.newInstance();
             domainStream.forEach(aggregateRoot::apply);
             return Optional.of(aggregateRoot);
         } catch (Exception e) {
-            log.warn("Could not load domain object", e);
+            log.error("Could not load domain object", e);
         }
         return Optional.empty();
     }
