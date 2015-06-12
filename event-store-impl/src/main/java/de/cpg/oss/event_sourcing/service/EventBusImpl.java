@@ -20,6 +20,7 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 import java.io.Closeable;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,7 +44,10 @@ public class EventBusImpl implements EventBus {
         final String jsonMetadata;
         try {
             json = objectMapper.writeValueAsString(event);
-            jsonMetadata = objectMapper.writeValueAsString(EventMetadata.builder().className(event.getClass().getCanonicalName()).build());
+            jsonMetadata = objectMapper.writeValueAsString(EventMetadata.builder()
+                    .className(event.getClass().getCanonicalName())
+                    .timestamp(OffsetDateTime.now())
+                    .build());
         } catch (final JsonProcessingException e) {
             log.error("Could not serialize event to JSON", e);
             return Optional.empty();

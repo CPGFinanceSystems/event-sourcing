@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 
 @Value
 @Builder(builderClassName = "Builder")
@@ -14,6 +15,7 @@ public class EventMetadata implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String className;
+    private final OffsetDateTime timestamp;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
