@@ -1,4 +1,4 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.event_store;
 
 import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
@@ -8,6 +8,7 @@ import de.cpg.oss.event_sourcing.domain.AggregateRoot;
 import de.cpg.oss.event_sourcing.event.Event;
 import de.cpg.oss.event_sourcing.event.EventHandler;
 import de.cpg.oss.event_sourcing.event.EventMetadata;
+import de.cpg.oss.event_sourcing.service.EventBus;
 import eventstore.EventData;
 import eventstore.EventNumber;
 import eventstore.SubscriptionObserver;

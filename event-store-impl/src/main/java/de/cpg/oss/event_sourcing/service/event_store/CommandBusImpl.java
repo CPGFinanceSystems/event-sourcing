@@ -1,10 +1,11 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.event_store;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.event_sourcing.command.Command;
 import de.cpg.oss.event_sourcing.command.CommandHandler;
+import de.cpg.oss.event_sourcing.service.CommandBus;
 import eventstore.Event;
 import eventstore.EventData;
 import eventstore.SubscriptionObserver;

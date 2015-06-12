@@ -1,9 +1,10 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.mock;
 
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.event_sourcing.command.Command;
 import de.cpg.oss.event_sourcing.command.CommandHandler;
+import de.cpg.oss.event_sourcing.service.CommandBus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;

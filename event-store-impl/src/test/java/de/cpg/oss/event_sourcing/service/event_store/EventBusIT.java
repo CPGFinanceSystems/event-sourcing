@@ -1,5 +1,7 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.event_store;
 
+import de.cpg.oss.event_sourcing.service.AbstractEventBusTest;
+import de.cpg.oss.event_sourcing.service.EventBus;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

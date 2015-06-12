@@ -1,6 +1,8 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.event_store;
 
 import com.fasterxml.uuid.Generators;
+import de.cpg.oss.event_sourcing.service.AbstractCommandBusTest;
+import de.cpg.oss.event_sourcing.service.CommandBus;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

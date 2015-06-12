@@ -1,4 +1,7 @@
-package de.cpg.oss.event_sourcing.service;
+package de.cpg.oss.event_sourcing.service.mock;
+
+import de.cpg.oss.event_sourcing.service.AbstractCommandBusTest;
+import de.cpg.oss.event_sourcing.service.CommandBus;
 
 public class CommandBusImplTest extends AbstractCommandBusTest {
 
