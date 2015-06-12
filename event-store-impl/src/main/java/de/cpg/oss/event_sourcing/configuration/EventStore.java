@@ -2,6 +2,7 @@ package de.cpg.oss.event_sourcing.configuration;
 
 import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.fasterxml.uuid.Generators;
 import de.cpg.oss.event_sourcing.service.*;
 import eventstore.Settings;
@@ -50,13 +51,13 @@ public class EventStore {
     }
 
     @Bean
-    public CommandBus commandBus(final EsConnection esConnection) {
-        return new CommandBusImpl(new ObjectMapper(), Generators.nameBasedGenerator(), esConnection);
+    public CommandBus commandBus(final ObjectMapper objectMapper, final EsConnection esConnection) {
+        return new CommandBusImpl(objectMapper, Generators.nameBasedGenerator(), esConnection);
     }
 
     @Bean
-    public EventBus eventBus(final EsConnection esConnection, final ActorSystem actorSystem) {
-        return new EventBusImpl(esConnection, actorSystem, new ObjectMapper());
+    public EventBus eventBus(final EsConnection esConnection, final ActorSystem actorSystem, final ObjectMapper objectMapper) {
+        return new EventBusImpl(esConnection, actorSystem, objectMapper);
     }
 
     @Bean
@@ -65,13 +66,20 @@ public class EventStore {
     }
 
     @Bean
-    public DomainRepository domainRepository(final EsConnection esConnection) {
-        return new DomainRepositoryImpl(esConnection, new ObjectMapper(), maxEventsToLoad);
+    public DomainRepository domainRepository(final EsConnection esConnection, final ObjectMapper objectMapper) {
+        return new DomainRepositoryImpl(esConnection, objectMapper, maxEventsToLoad);
     }
 
     @Bean
     public HealthIndicator eventStoreHealthIndicator(final ActorSystem actorSystem) {
         return new EventStoreHealthIndicator(actorSystem);
+    }
+
+    @Bean
+    public ObjectMapper jsr310EnabledObjectMapper() {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JSR310Module());
+        return objectMapper;
     }
 }
 
