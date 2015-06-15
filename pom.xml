@@ -50,7 +50,7 @@
         <module>verita-api</module>
         <module>verita-mock-impl</module>
         <module>verita-event-store-impl</module>
-        <module>verita-event-store-spring</module>
+        <module>verita-spring</module>
     </modules>
 
     <dependencyManagement>

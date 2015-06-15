@@ -10,7 +10,7 @@
         <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>verita-event-store-spring</artifactId>
+    <artifactId>verita-spring</artifactId>
 
     <properties>
         <spring.version>4.1.6.RELEASE</spring.version>
@@ -27,6 +27,13 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>verita-event-store-impl</artifactId>
             <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>verita-mock-impl</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

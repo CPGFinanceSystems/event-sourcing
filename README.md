@@ -30,11 +30,10 @@ providing configuration management for the Event Store implementation
 
 ## Download
 
-Binaries are available on maven central with following GAV:
+Binaries are available on maven central (see above badge)
 
 - groupId: `de.cpg.oss.verita`
-- artifacts: `verita-api`, `verita-mock-impl`, `verita-event-store-impl`, `verita-event-store-spring`
-- version: `1.0.1`
+- artifacts: `verita-api`, `verita-mock-impl`, `verita-event-store-impl`, `verita-spring`
 
 ## TODO / Ideas
 

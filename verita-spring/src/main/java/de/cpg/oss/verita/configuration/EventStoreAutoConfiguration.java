@@ -30,7 +30,7 @@ import java.net.InetSocketAddress;
 @ConditionalOnProperty(prefix = EventStoreAutoConfiguration.CONFIG_PREFIX, name = "enabled", matchIfMissing = true)
 public class EventStoreAutoConfiguration {
 
-    public static final String CONFIG_PREFIX = "eventstore";
+    public static final String CONFIG_PREFIX = "verita.eventstore";
 
     @Configuration
     @ConditionalOnMissingBean(EsConnection.class)

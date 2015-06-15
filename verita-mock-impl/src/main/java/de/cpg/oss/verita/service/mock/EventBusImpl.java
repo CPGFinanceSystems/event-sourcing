@@ -3,7 +3,6 @@ package de.cpg.oss.verita.service.mock;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
-import de.cpg.oss.verita.service.EventBus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
@@ -11,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class EventBusImpl implements EventBus {
+public class EventBusImpl implements DomainAwareEventBus {
 
     private final Map<String, EventHandler> subscriptions;
     private final Map<String, List<Event>> eventStreams;
@@ -79,6 +78,7 @@ public class EventBusImpl implements EventBus {
         return () -> subscriptions.remove(eventClass.getSimpleName());
     }
 
+    @Override
     public <T extends AggregateRoot> List<Event> domainStreamOf(final Class<T> aggregateRootClass) {
         final String key = aggregateRootClass.getSimpleName();
         domainStreams.putIfAbsent(key, new ArrayList<>());

@@ -12,9 +12,9 @@ import java.util.stream.Stream;
 @Slf4j
 public class DomainRepositoryImpl implements DomainRepository {
 
-    private final EventBusImpl eventBus;
+    private final DomainAwareEventBus eventBus;
 
-    public DomainRepositoryImpl(final EventBusImpl eventBus) {
+    public DomainRepositoryImpl(final DomainAwareEventBus eventBus) {
         this.eventBus = eventBus;
     }
 
