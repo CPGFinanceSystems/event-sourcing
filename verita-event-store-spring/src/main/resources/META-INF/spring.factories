@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.cpg.oss.event_sourcing.configuration.EventStoreAutoConfiguration
+de.cpg.oss.verita.configuration.EventStoreAutoConfiguration
