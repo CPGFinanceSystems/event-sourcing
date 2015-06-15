@@ -31,7 +31,7 @@ Binaries are available on maven central with following GAV:
 
 - groupId: `de.cpg.oss.verita`
 - artifacts: `verita-api`, `verita-mock-impl`, `verita-event-store-impl`, `verita-event-store-spring`
-- version: `1.0.0`
+- version: `1.0.1`
 
 ## TODO / Ideas
 
