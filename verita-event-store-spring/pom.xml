@@ -7,7 +7,7 @@
     <parent>
         <groupId>de.cpg.oss.verita</groupId>
         <artifactId>verita-parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>verita-event-store-spring</artifactId>
