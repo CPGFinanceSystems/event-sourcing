@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>parent-pom</artifactId>
-        <groupId>de.cpg.oss.event-sourcing</groupId>
+        <groupId>de.cpg.oss.verita</groupId>
+        <artifactId>verita-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>event-store-spring</artifactId>
+    <artifactId>verita-event-store-spring</artifactId>
 
     <properties>
         <spring.version>4.1.6.RELEASE</spring.version>
@@ -20,12 +20,12 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>api</artifactId>
+            <artifactId>verita-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>event-store-impl</artifactId>
+            <artifactId>verita-event-store-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -5,17 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>parent-pom</artifactId>
-        <groupId>de.cpg.oss.event-sourcing</groupId>
+        <groupId>de.cpg.oss.verita</groupId>
+        <artifactId>verita-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>mock-impl</artifactId>
+    <artifactId>verita-mock-impl</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>api</artifactId>
+            <artifactId>verita-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
