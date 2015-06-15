@@ -35,7 +35,7 @@ public class EventStoreAutoConfiguration {
     @Configuration
     @ConditionalOnMissingBean(EsConnection.class)
     @EnableConfigurationProperties(EventStoreProperties.class)
-    public static class FlywayConfiguration {
+    public static class EventStoreConfiguration {
 
         @Autowired
         private EventStoreProperties properties = new EventStoreProperties();
