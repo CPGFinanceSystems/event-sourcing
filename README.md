@@ -2,12 +2,10 @@
 Verita (it: truth) is [Event Sourcing](https://msdn.microsoft.com/en-us/library/dn589792.aspx) for the JVM with
 various implementations
 
-[![Build Status](https://api.travis-ci.org/CPGFinanceSystems/verita.svg?branch=master)]
-(https://travis-ci.org/CPGFinanceSystems/verita)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.cpg.oss.verita/verita-api/badge.svg)]
-(https://maven-badges.herokuapp.com/maven-central/de.cpg.oss.verita/verita-api)
-[![Licence](https://img.shields.io/github/license/CPGFinanceSystems/verita.svg)]
-(https://github.com/CPGFinanceSystems/verita/blob/master/LICENSE)
+[![Licence](https://img.shields.io/github/license/CPGFinanceSystems/verita.svg)](https://github.com/CPGFinanceSystems/verita/blob/master/LICENSE)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.cpg.oss.verita/verita-api/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.cpg.oss.verita/verita-api)
+[![Build Status](https://api.travis-ci.org/CPGFinanceSystems/verita.svg?branch=master)](https://travis-ci.org/CPGFinanceSystems/verita)
+[![Coverage Status](https://coveralls.io/repos/CPGFinanceSystems/verita/badge.svg)](https://coveralls.io/r/CPGFinanceSystems/verita)
 
 ## Components
 
