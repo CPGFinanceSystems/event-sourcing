@@ -3,6 +3,7 @@ package de.cpg.oss.verita.service.mock;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
+import de.cpg.oss.verita.event.EventHandlerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
@@ -16,12 +17,14 @@ public class EventBusImpl implements DomainAwareEventBus {
     private final Map<String, List<Event>> eventStreams;
     private final Map<String, List<Event>> domainStreams;
     private final Map<String, Integer> offsets;
+    private final List<EventHandlerInterceptor> interceptors;
 
     public EventBusImpl() {
         subscriptions = new ConcurrentHashMap<>();
         eventStreams = new ConcurrentHashMap<>();
         domainStreams = new ConcurrentHashMap<>();
         offsets = new ConcurrentHashMap<>();
+        interceptors = new LinkedList<>();
     }
 
     @Override
@@ -44,7 +47,7 @@ public class EventBusImpl implements DomainAwareEventBus {
                     .filter((set) -> key.equals(set.getKey()))
                     .map(Map.Entry::getValue)
                     .findFirst()
-                    .ifPresent((eventHandler) -> handleEvent(eventHandler, event, eventId, sequenceNumber));
+                    .ifPresent((eventHandler) -> handleEvent(interceptors, eventHandler, event, eventId, sequenceNumber));
         }
         return Optional.of(eventId);
     }
@@ -70,12 +73,17 @@ public class EventBusImpl implements DomainAwareEventBus {
             int counter = 0;
             for (final Event event : stream) {
                 if (counter > sequenceNumber) {
-                    handleEvent(handler, (T) event, UUID.randomUUID(), counter);
+                    handleEvent(interceptors, handler, (T) event, UUID.randomUUID(), counter);
                 }
                 counter++;
             }
         });
         return () -> subscriptions.remove(eventClass.getSimpleName());
+    }
+
+    @Override
+    public void append(final EventHandlerInterceptor interceptor) {
+        interceptors.add(interceptor);
     }
 
     @Override
@@ -86,6 +94,7 @@ public class EventBusImpl implements DomainAwareEventBus {
     }
 
     private static <T extends Event> void handleEvent(
+            final List<EventHandlerInterceptor> interceptors,
             final EventHandler<T> eventHandler,
             final T event,
             final UUID eventId,
@@ -93,7 +102,17 @@ public class EventBusImpl implements DomainAwareEventBus {
         try {
             log.debug("{}: handle event {} with ID {} and sequence number {}",
                     eventHandler.getClass().getSimpleName(), event, eventId, sequenceNumber);
+            for (final EventHandlerInterceptor interceptor : interceptors) {
+                if (!interceptor.beforeHandle(event, eventId, sequenceNumber)) {
+                    log.debug("Processing of event {} stopped after interceptor {}",
+                            event.getClass().getSimpleName(),
+                            interceptor.getClass().getSimpleName());
+                    return;
+                }
+            }
             eventHandler.handle(event, eventId, sequenceNumber);
+            interceptors.parallelStream()
+                    .forEach(i -> i.afterHandle(event, eventId, sequenceNumber));
         } catch (final Exception e) {
             log.error("Unknown error in event handler " + eventHandler.getClass().getSimpleName(), e);
             eventHandler.onError(e);

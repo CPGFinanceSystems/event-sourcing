@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
+import de.cpg.oss.verita.event.EventHandlerInterceptor;
 import de.cpg.oss.verita.event.EventMetadata;
 import de.cpg.oss.verita.service.EventBus;
 import eventstore.EventData;
@@ -16,15 +17,14 @@ import eventstore.WriteResult;
 import eventstore.j.EsConnection;
 import eventstore.j.EventDataBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.PortableInterceptor.Interceptor;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 import java.io.Closeable;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 public class EventBusImpl implements EventBus {
@@ -32,11 +32,13 @@ public class EventBusImpl implements EventBus {
     private final EsConnection esConnection;
     private final ActorSystem actorSystem;
     private final ObjectMapper objectMapper;
+    private final List<EventHandlerInterceptor> interceptors;
 
     public EventBusImpl(final EsConnection esConnection, final ActorSystem actorSystem, final ObjectMapper objectMapper) {
         this.esConnection = esConnection;
         this.actorSystem = actorSystem;
         this.objectMapper = objectMapper;
+        this.interceptors = new LinkedList<>();
     }
 
     @Override
@@ -76,28 +78,33 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public <T extends Event> Closeable subscribeTo(final Class<T> eventClass, final EventHandler<T> handler) {
-        final String streamId = streamIdOf(eventClass);
+        final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {}", streamId);
-        return esConnection.subscribeToStream(streamId, asSubscriptionObserver(eventClass, handler), false, null);
+        return esConnection.subscribeToStream(streamId, asSubscriptionObserver(handler), false, null);
     }
 
     @Override
     public <T extends Event> Closeable subscribeToStartingFrom(final Class<T> eventClass, final EventHandler<T> handler, final int sequenceNumber) {
-        final String streamId = streamIdOf(eventClass);
+        final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
         return esConnection.subscribeToStreamFrom(
                 streamId,
-                asSubscriptionObserver(eventClass, handler),
+                asSubscriptionObserver(handler),
                 sequenceNumber >= 0 ? sequenceNumber : null,
                 false,
                 null);
+    }
+
+    @Override
+    public void append(final EventHandlerInterceptor interceptor) {
+        interceptors.add(interceptor);
     }
 
     private static <T extends Event> String streamIdOf(final Class<T> eventClass) {
         return "$et-".concat(eventClass.getSimpleName());
     }
 
-    private <T extends Event> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(final Class<T> eventClass, final EventHandler<T> handler) {
+    private <T extends Event> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(final EventHandler<T> handler) {
         return new SubscriptionObserver<eventstore.Event>() {
             @Override
             public void onLiveProcessingStart(final Closeable closeable) {
@@ -117,8 +124,23 @@ public class EventBusImpl implements EventBus {
                             if (null != throwable) {
                                 onError(throwable);
                             } else {
-                                final T eventData = objectMapper.readValue(event.data().data().value().utf8String(), eventClass);
-                                handler.handle(eventData, event.data().eventId(), eventLink.number().value());
+                                final T eventData = objectMapper.readValue(
+                                        event.data().data().value().utf8String(),
+                                        handler.eventClass());
+                                final UUID eventId = event.data().eventId();
+                                final int sequenceNumber = eventLink.number().value();
+
+                                for (final EventHandlerInterceptor interceptor : interceptors) {
+                                    if (!interceptor.beforeHandle(eventData, eventId, sequenceNumber)) {
+                                        log.debug("Processing of event {} stopped after interceptor {}",
+                                                eventData.getClass().getSimpleName(),
+                                                interceptor.getClass().getSimpleName());
+                                        return;
+                                    }
+                                }
+                                handler.handle(eventData, eventId, sequenceNumber);
+                                interceptors.parallelStream()
+                                        .forEach(i -> i.afterHandle(eventData, eventId, sequenceNumber));
                             }
                         }
                     }, actorSystem.dispatcher());

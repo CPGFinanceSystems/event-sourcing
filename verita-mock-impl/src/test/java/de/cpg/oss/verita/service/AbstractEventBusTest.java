@@ -1,7 +1,9 @@
 package de.cpg.oss.verita.service;
 
 import de.cpg.oss.verita.event.AbstractEventHandler;
+import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
+import de.cpg.oss.verita.event.EventHandlerInterceptor;
 import de.cpg.oss.verita.test.ToDoItem;
 import de.cpg.oss.verita.test.ToDoItemCreated;
 import org.junit.Test;
@@ -57,6 +59,40 @@ public abstract class AbstractEventBusTest {
                     fail("Timeout on receiving expected event");
                 }
             }
+        }
+    }
+
+    @Test
+    public void testInterceptor() throws Exception {
+        eventBus().append(new EventHandlerInterceptor() {
+            @Override
+            public boolean beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
+                return false;
+            }
+
+            @Override
+            public void afterHandle(final Event event, final UUID eventId, final int sequenceNumber) {
+            }
+        });
+
+        try (Closeable ignored = eventBus().subscribeTo(ToDoItemCreated.class, new EventHandler<ToDoItemCreated>() {
+            @Override
+            public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
+                fail("Expected call of EventHandler to be blocked by interceptor");
+            }
+
+            @Override
+            public void onError(final Throwable throwable) {
+                fail(throwable.getMessage());
+            }
+
+            @Override
+            public Class<ToDoItemCreated> eventClass() {
+                return ToDoItemCreated.class;
+            }
+        })) {
+            final ToDoItemCreated event = ToDoItemCreated.builder().description("TODO").id(UUID.randomUUID()).build();
+            eventBus().publish(event, new ToDoItem(event));
         }
     }
 

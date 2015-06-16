@@ -3,6 +3,7 @@ package de.cpg.oss.verita.service;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
+import de.cpg.oss.verita.event.EventHandlerInterceptor;
 
 import java.io.Closeable;
 import java.util.Optional;
@@ -15,4 +16,6 @@ public interface EventBus {
     <T extends Event> Closeable subscribeTo(Class<T> eventClass, EventHandler<T> handler);
 
     <T extends Event> Closeable subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber);
+
+    void append(EventHandlerInterceptor interceptor);
 }
