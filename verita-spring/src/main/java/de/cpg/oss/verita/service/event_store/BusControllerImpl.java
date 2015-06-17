@@ -1,4 +1,4 @@
-package de.cpg.oss.verita.service;
+package de.cpg.oss.verita.service.event_store;
 
 import akka.actor.ActorSystem;
 import scala.concurrent.duration.Duration;

@@ -5,8 +5,9 @@ import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.service.EventBus;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface DomainAwareEventBus extends EventBus {
 
-    <T extends AggregateRoot> List<Event> domainStreamOf(final Class<T> aggregateRootClass);
+    <T extends AggregateRoot> List<Event> eventListOf(final Class<T> aggregateRootClass, final UUID id);
 }

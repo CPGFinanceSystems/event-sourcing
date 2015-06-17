@@ -3,28 +3,26 @@ package de.cpg.oss.verita.service.mock;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
-import de.cpg.oss.verita.event.EventHandlerInterceptor;
+import de.cpg.oss.verita.service.AbstractEventBus;
+import de.cpg.oss.verita.service.Subscription;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Closeable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class EventBusImpl implements DomainAwareEventBus {
+public class EventBusImpl extends AbstractEventBus implements DomainAwareEventBus {
 
     private final Map<String, EventHandler> subscriptions;
     private final Map<String, List<Event>> eventStreams;
     private final Map<String, List<Event>> domainStreams;
     private final Map<String, Integer> offsets;
-    private final List<EventHandlerInterceptor> interceptors;
 
     public EventBusImpl() {
-        subscriptions = new ConcurrentHashMap<>();
-        eventStreams = new ConcurrentHashMap<>();
-        domainStreams = new ConcurrentHashMap<>();
-        offsets = new ConcurrentHashMap<>();
-        interceptors = new LinkedList<>();
+        this.subscriptions = new ConcurrentHashMap<>();
+        this.eventStreams = new ConcurrentHashMap<>();
+        this.domainStreams = new ConcurrentHashMap<>();
+        this.offsets = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -36,7 +34,7 @@ public class EventBusImpl implements DomainAwareEventBus {
         offsets.putIfAbsent(key, -1);
 
         final List<Event> eventStream = eventStreams.get(key);
-        final List<Event> domainStream = domainStreamOf(aggregateRoot.getClass());
+        final List<Event> domainStream = eventListOf(aggregateRoot.getClass(), aggregateRoot.id());
         final int sequenceNumber = eventStream.size();
 
         eventStream.add(event);
@@ -47,22 +45,21 @@ public class EventBusImpl implements DomainAwareEventBus {
                     .filter((set) -> key.equals(set.getKey()))
                     .map(Map.Entry::getValue)
                     .findFirst()
-                    .ifPresent((eventHandler) -> handleEvent(interceptors, eventHandler, event, eventId, sequenceNumber));
+                    .ifPresent((eventHandler) -> handleEvent(eventHandler, event, eventId, sequenceNumber));
         }
         return Optional.of(eventId);
     }
 
     @Override
-    public <T extends Event> Closeable subscribeTo(final Class<T> eventClass, final EventHandler<T> handler) {
-        return subscribeToStartingFrom(eventClass, handler, 0);
+    public <T extends Event> Subscription subscribeTo(final EventHandler<T> handler) {
+        return subscribeToStartingFrom(handler, 0);
     }
 
     @Override
-    public <T extends Event> Closeable subscribeToStartingFrom(
-            final Class<T> eventClass,
+    public <T extends Event> Subscription subscribeToStartingFrom(
             final EventHandler<T> handler,
             final int sequenceNumber) {
-        final String key = eventClass.getSimpleName();
+        final String key = handler.eventClass().getSimpleName();
 
         subscriptions.put(key, handler);
         offsets.put(key, sequenceNumber);
@@ -73,49 +70,19 @@ public class EventBusImpl implements DomainAwareEventBus {
             int counter = 0;
             for (final Event event : stream) {
                 if (counter > sequenceNumber) {
-                    handleEvent(interceptors, handler, (T) event, UUID.randomUUID(), counter);
+                    handleEvent(handler, (T) event, UUID.randomUUID(), counter);
                 }
                 counter++;
             }
         });
-        return () -> subscriptions.remove(eventClass.getSimpleName());
+
+        return () -> subscriptions.remove(handler.eventClass().getSimpleName());
     }
 
     @Override
-    public void append(final EventHandlerInterceptor interceptor) {
-        interceptors.add(interceptor);
-    }
-
-    @Override
-    public <T extends AggregateRoot> List<Event> domainStreamOf(final Class<T> aggregateRootClass) {
-        final String key = aggregateRootClass.getSimpleName();
+    public <T extends AggregateRoot> List<Event> eventListOf(final Class<T> aggregateRootClass, final UUID id) {
+        final String key = aggregateRootClass.getSimpleName().concat("-").concat(id.toString());
         domainStreams.putIfAbsent(key, new ArrayList<>());
         return domainStreams.get(key);
-    }
-
-    private static <T extends Event> void handleEvent(
-            final List<EventHandlerInterceptor> interceptors,
-            final EventHandler<T> eventHandler,
-            final T event,
-            final UUID eventId,
-            final int sequenceNumber) {
-        try {
-            log.debug("{}: handle event {} with ID {} and sequence number {}",
-                    eventHandler.getClass().getSimpleName(), event, eventId, sequenceNumber);
-            for (final EventHandlerInterceptor interceptor : interceptors) {
-                if (!interceptor.beforeHandle(event, eventId, sequenceNumber)) {
-                    log.debug("Processing of event {} stopped after interceptor {}",
-                            event.getClass().getSimpleName(),
-                            interceptor.getClass().getSimpleName());
-                    return;
-                }
-            }
-            eventHandler.handle(event, eventId, sequenceNumber);
-            interceptors.parallelStream()
-                    .forEach(i -> i.afterHandle(event, eventId, sequenceNumber));
-        } catch (final Exception e) {
-            log.error("Unknown error in event handler " + eventHandler.getClass().getSimpleName(), e);
-            eventHandler.onError(e);
-        }
     }
 }

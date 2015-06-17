@@ -5,7 +5,6 @@ import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
 import de.cpg.oss.verita.event.EventHandlerInterceptor;
 
-import java.io.Closeable;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,9 +12,9 @@ public interface EventBus {
 
     Optional<UUID> publish(Event event, AggregateRoot aggregateRoot);
 
-    <T extends Event> Closeable subscribeTo(Class<T> eventClass, EventHandler<T> handler);
+    <T extends Event> Subscription subscribeTo(EventHandler<T> handler);
 
-    <T extends Event> Closeable subscribeToStartingFrom(Class<T> eventClass, EventHandler<T> handler, int sequenceNumber);
+    <T extends Event> Subscription subscribeToStartingFrom(EventHandler<T> handler, int sequenceNumber);
 
     void append(EventHandlerInterceptor interceptor);
 }

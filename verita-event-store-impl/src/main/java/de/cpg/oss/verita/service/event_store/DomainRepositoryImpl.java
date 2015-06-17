@@ -4,18 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventMetadata;
-import de.cpg.oss.verita.service.DomainRepository;
+import de.cpg.oss.verita.service.AbstractDomainRepository;
 import eventstore.ReadStreamEventsCompleted;
 import eventstore.j.EsConnection;
 import lombok.extern.slf4j.Slf4j;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
-public class DomainRepositoryImpl implements DomainRepository {
+public class DomainRepositoryImpl extends AbstractDomainRepository {
 
     private final EsConnection esConnection;
     private final ObjectMapper objectMapper;
@@ -29,30 +29,28 @@ public class DomainRepositoryImpl implements DomainRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends AggregateRoot> Optional<T> findById(final Class<T> aggregateRootClass, final UUID id) {
+    public <T extends AggregateRoot> Stream<Event> eventStreamOf(final Class<T> aggregateRootClass, final UUID id) {
         final String streamId = EventUtil.eventStreamFor(aggregateRootClass, id);
 
         try {
             final ReadStreamEventsCompleted completed = Await.result(
                     esConnection.readStreamEventsForward(streamId, null, maxEventsToLoad, false, null),
                     Duration.Inf());
-            final T aggregateRoot = aggregateRootClass.newInstance();
-            completed.eventsJava().stream().forEach(eventFromStream -> {
+            return completed.eventsJava().stream().map(eventFromStream -> {
+                final String metadataJson = eventFromStream.data().metadata().value().utf8String();
+                final String eventJson = eventFromStream.data().data().value().utf8String();
                 try {
-                    final String metadataJson = eventFromStream.data().metadata().value().utf8String();
-                    final String eventJson = eventFromStream.data().data().value().utf8String();
                     final EventMetadata metadata = objectMapper.readValue(metadataJson, EventMetadata.class);
                     final Class<?> eventClass = Class.forName(metadata.getClassName());
-                    final Event event = objectMapper.readValue(eventJson, (Class<Event>) eventClass);
-                    aggregateRoot.apply(event);
-                } catch (final Exception e) {
-                    log.warn("Could not apply event to domain object", e);
+                    return objectMapper.readValue(eventJson, (Class<Event>) eventClass);
+                } catch (Exception e) {
+                    log.error("Could not load event from stream for domain object " + aggregateRootClass.getSimpleName(), e);
+                    return null;
                 }
             });
-            return Optional.of(aggregateRoot);
         } catch (final Exception e) {
-            log.error("Could not load domain object", e);
-            return Optional.empty();
+            log.error("Could not load event stream for domain object " + aggregateRootClass.getSimpleName(), e);
         }
+        return Stream.empty();
     }
 }

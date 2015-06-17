@@ -1,4 +1,4 @@
-package de.cpg.oss.verita.configuration;
+package de.cpg.oss.verita.configuration.event_store;
 
 import akka.actor.ActorSystem;
 import org.springframework.boot.actuate.health.Health;

@@ -8,7 +8,6 @@ import de.cpg.oss.verita.test.ToDoItem;
 import de.cpg.oss.verita.test.ToDoItemCreated;
 import org.junit.Test;
 
-import java.io.Closeable;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +45,7 @@ public abstract class AbstractEventBusTest {
         };
 
 
-        try (Closeable ignored = eventBus().subscribeTo(ToDoItemCreated.class, eventHandler)) {
+        try (Subscription ignored = eventBus().subscribeTo(eventHandler)) {
             final ToDoItemCreated event = ToDoItemCreated.builder()
                     .description(description)
                     .id(UUID.randomUUID()).build();
@@ -54,7 +53,7 @@ public abstract class AbstractEventBusTest {
             assertThat(eventId).isPresent();
 
             synchronized (condition) {
-                condition.wait(TimeUnit.SECONDS.toMillis(5));
+                condition.wait(TimeUnit.SECONDS.toMillis(1));
                 if (!condition.get()) {
                     fail("Timeout on receiving expected event");
                 }
@@ -75,7 +74,7 @@ public abstract class AbstractEventBusTest {
             }
         });
 
-        try (Closeable ignored = eventBus().subscribeTo(ToDoItemCreated.class, new EventHandler<ToDoItemCreated>() {
+        try (Subscription ignored = eventBus().subscribeTo(new EventHandler<ToDoItemCreated>() {
             @Override
             public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
                 fail("Expected call of EventHandler to be blocked by interceptor");
@@ -130,9 +129,9 @@ public abstract class AbstractEventBusTest {
             }
         };
 
-        try (Closeable ignored = eventBus().subscribeToStartingFrom(ToDoItemCreated.class, eventHandler, -1)) {
+        try (Subscription ignored = eventBus().subscribeToStartingFrom(eventHandler, -1)) {
             synchronized (condition) {
-                condition.wait(TimeUnit.SECONDS.toMillis(2));
+                condition.wait(TimeUnit.SECONDS.toMillis(1));
                 if (!condition.get()) {
                     fail("Timout waiting for expected events. Check if $et projection is enabled in event store.");
                 }

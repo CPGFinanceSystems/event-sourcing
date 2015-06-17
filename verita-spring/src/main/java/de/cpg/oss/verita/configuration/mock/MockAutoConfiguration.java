@@ -1,11 +1,11 @@
-package de.cpg.oss.verita.configuration;
+package de.cpg.oss.verita.configuration.mock;
 
+import de.cpg.oss.verita.event.SubscriptionStateInterceptor;
 import de.cpg.oss.verita.service.CommandBus;
 import de.cpg.oss.verita.service.DomainRepository;
-import de.cpg.oss.verita.service.mock.CommandBusImpl;
-import de.cpg.oss.verita.service.mock.DomainAwareEventBus;
-import de.cpg.oss.verita.service.mock.DomainRepositoryImpl;
-import de.cpg.oss.verita.service.mock.EventBusImpl;
+import de.cpg.oss.verita.service.EventBus;
+import de.cpg.oss.verita.service.SubscriptionStateRepository;
+import de.cpg.oss.verita.service.mock.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,6 +27,14 @@ public class MockAutoConfiguration {
     @ConditionalOnMissingBean
     public DomainAwareEventBus eventBus() {
         return new EventBusImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SubscriptionStateRepository subscriptionStateRepository(final EventBus eventBus) {
+        final SubscriptionStateRepositoryImpl repository = new SubscriptionStateRepositoryImpl();
+        eventBus.append(new SubscriptionStateInterceptor(repository));
+        return repository;
     }
 
     @Bean

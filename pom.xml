@@ -48,6 +48,7 @@
 
     <modules>
         <module>verita-api</module>
+        <module>verita-util</module>
         <module>verita-mock-impl</module>
         <module>verita-event-store-impl</module>
         <module>verita-spring</module>
