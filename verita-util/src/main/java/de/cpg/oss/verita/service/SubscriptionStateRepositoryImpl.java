@@ -1,13 +1,9 @@
-package de.cpg.oss.verita.service.event_store;
+package de.cpg.oss.verita.service;
 
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.SubscriptionCreated;
 import de.cpg.oss.verita.event.SubscriptionUpdated;
-import de.cpg.oss.verita.service.DomainRepository;
-import de.cpg.oss.verita.service.EventBus;
-import de.cpg.oss.verita.service.SubscriptionState;
-import de.cpg.oss.verita.service.SubscriptionStateRepository;
 
 import java.util.Optional;
 import java.util.UUID;

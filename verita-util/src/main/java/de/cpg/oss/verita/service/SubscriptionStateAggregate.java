@@ -1,10 +1,9 @@
-package de.cpg.oss.verita.service.event_store;
+package de.cpg.oss.verita.service;
 
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.SubscriptionCreated;
 import de.cpg.oss.verita.event.SubscriptionUpdated;
-import de.cpg.oss.verita.service.SubscriptionState;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;

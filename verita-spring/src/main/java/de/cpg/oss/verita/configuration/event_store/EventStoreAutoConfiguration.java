@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.StringArgGenerator;
+import de.cpg.oss.verita.configuration.VeritaProperties;
 import de.cpg.oss.verita.event.SubscriptionStateInterceptor;
 import de.cpg.oss.verita.service.*;
 import de.cpg.oss.verita.service.event_store.*;
@@ -27,18 +28,19 @@ import java.net.InetSocketAddress;
 
 @Configuration
 @ConditionalOnClass(EsConnection.class)
-@ConditionalOnProperty(prefix = EventStoreAutoConfiguration.CONFIG_PREFIX, name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = EventStoreProperties.CONFIG_PREFIX, name = "enabled", matchIfMissing = true)
 public class EventStoreAutoConfiguration {
-
-    public static final String CONFIG_PREFIX = "verita.eventstore";
 
     @Configuration
     @ConditionalOnMissingBean(EsConnection.class)
-    @EnableConfigurationProperties(EventStoreProperties.class)
+    @EnableConfigurationProperties({VeritaProperties.class, EventStoreProperties.class})
     public static class EventStoreConfiguration {
 
         @Autowired
-        private final EventStoreProperties properties = new EventStoreProperties();
+        private final EventStoreProperties eventStoreProperties = new EventStoreProperties();
+
+        @Autowired
+        private final VeritaProperties veritaProperties = new VeritaProperties();
 
         @Bean
         @ConditionalOnMissingBean
@@ -61,11 +63,11 @@ public class EventStoreAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        @ConfigurationProperties(prefix = CONFIG_PREFIX)
+        @ConfigurationProperties(prefix = EventStoreProperties.CONFIG_PREFIX)
         public EsConnection _esConnection(final ActorSystem system) {
             final Settings settings = new SettingsBuilder()
-                    .address(new InetSocketAddress(this.properties.getHostname(), this.properties.getPort()))
-                    .defaultCredentials(new UserCredentials(this.properties.getUsername(), this.properties.getPassword()))
+                    .address(new InetSocketAddress(this.eventStoreProperties.getHostname(), this.eventStoreProperties.getPort()))
+                    .defaultCredentials(new UserCredentials(this.eventStoreProperties.getUsername(), this.eventStoreProperties.getPassword()))
                     .build();
 
             return EsConnectionFactory.create(system, settings);
@@ -85,9 +87,9 @@ public class EventStoreAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        @ConfigurationProperties(prefix = CONFIG_PREFIX)
+        @ConfigurationProperties(prefix = EventStoreProperties.CONFIG_PREFIX)
         public DomainRepository domainRepository(final EsConnection esConnection, final ObjectMapper objectMapper) {
-            return new DomainRepositoryImpl(esConnection, objectMapper, this.properties.getMaxEventsToLoad());
+            return new DomainRepositoryImpl(esConnection, objectMapper, this.eventStoreProperties.getMaxEventsToLoad());
         }
 
         @Bean
@@ -110,13 +112,13 @@ public class EventStoreAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        @ConfigurationProperties(prefix = CONFIG_PREFIX)
+        @ConfigurationProperties(prefix = VeritaProperties.CONFIG_PREFIX)
         public SubscriptionStateRepository subscriptionStateRepository(
                 final EventBus eventBus,
                 final DomainRepository domainRepository,
                 final StringArgGenerator uuidGenerator) {
             final SubscriptionStateRepository repository = new SubscriptionStateRepositoryImpl(
-                    this.properties.getApplicationId(),
+                    this.veritaProperties.getApplicationId(),
                     eventBus,
                     domainRepository,
                     uuidGenerator);
