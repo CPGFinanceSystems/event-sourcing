@@ -5,11 +5,11 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 
-public class EventStoreHealthIndicator implements HealthIndicator {
+public class VeritaEventStoreHealthIndicator implements HealthIndicator {
 
     private final ActorSystem actorSystem;
 
-    public EventStoreHealthIndicator(final ActorSystem actorSystem) {
+    public VeritaEventStoreHealthIndicator(final ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
     }
 

@@ -65,12 +65,16 @@ public abstract class AbstractEventBusTest {
     public void testInterceptor() throws Exception {
         eventBus().append(new EventHandlerInterceptor() {
             @Override
-            public boolean beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
-                return false;
+            public Decision beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
+                return Decision.STOP;
             }
 
             @Override
             public void afterHandle(final Event event, final UUID eventId, final int sequenceNumber) {
+            }
+
+            @Override
+            public void afterSubscribeTo(final EventHandler<? extends Event> eventHandler) {
             }
         });
 

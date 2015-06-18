@@ -13,7 +13,8 @@ import java.util.UUID;
 public class SubscriptionCreated implements Event {
     private static final long serialVersionUID = 1L;
 
-    private final UUID subscriptionId;
+    private final UUID id;
+    private final String name;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {

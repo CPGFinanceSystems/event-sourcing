@@ -10,10 +10,7 @@ import de.cpg.oss.verita.event.EventHandler;
 import de.cpg.oss.verita.event.EventMetadata;
 import de.cpg.oss.verita.service.AbstractEventBus;
 import de.cpg.oss.verita.service.Subscription;
-import eventstore.EventData;
-import eventstore.EventNumber;
-import eventstore.SubscriptionObserver;
-import eventstore.WriteResult;
+import eventstore.*;
 import eventstore.j.EsConnection;
 import eventstore.j.EventDataBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +19,10 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class EventBusImpl extends AbstractEventBus {
@@ -78,19 +75,54 @@ public class EventBusImpl extends AbstractEventBus {
     public <T extends Event> Subscription subscribeTo(final EventHandler<T> handler) {
         final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {}", streamId);
-        return wrap(esConnection.subscribeToStream(streamId, asSubscriptionObserver(handler), false, null));
+        final Subscription subscription = wrap(esConnection.subscribeToStream(
+                streamId,
+                asSubscriptionObserver(handler),
+                false,
+                null));
+        afterSubscribeTo(handler);
+        return subscription;
     }
 
     @Override
     public <T extends Event> Subscription subscribeToStartingFrom(final EventHandler<T> handler, final int sequenceNumber) {
         final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
-        return wrap(esConnection.subscribeToStreamFrom(
+        final Subscription subscription = wrap(esConnection.subscribeToStreamFrom(
                 streamId,
                 asSubscriptionObserver(handler),
                 sequenceNumber >= 0 ? sequenceNumber : null,
                 false,
                 null));
+        afterSubscribeTo(handler);
+        return subscription;
+    }
+
+    @Override
+    public Iterable<Event> eventStreamOf(final Class<? extends AggregateRoot> aggregateRootClass, final UUID id) {
+        final String streamId = EventUtil.eventStreamFor(aggregateRootClass, id);
+
+        final List<Event> wholeStream = new LinkedList<>();
+        Optional<EventNumber.Exact> start = Optional.empty();
+
+        do {
+            try {
+                start = readEventsFromStream(streamId, start, 100).map((completed) -> {
+                    wholeStream.addAll(completed.eventsJava().stream()
+                            .map(this::deserialize)
+                            .collect(Collectors.toSet()));
+                    return completed.lastEventNumber();
+                });
+            } catch (final Exception e) {
+                log.error("Could not load event stream for domain object " + aggregateRootClass.getSimpleName(), e);
+            }
+        } while (start.isPresent());
+
+        return wholeStream;
+    }
+
+    private static Subscription wrap(final Closeable closeable) {
+        return closeable::close;
     }
 
     private static <T extends Event> String streamIdOf(final Class<T> eventClass) {
@@ -117,9 +149,7 @@ public class EventBusImpl extends AbstractEventBus {
                             if (null != throwable) {
                                 onError(throwable);
                             } else {
-                                final T eventData = objectMapper.readValue(
-                                        event.data().data().value().utf8String(),
-                                        handler.eventClass());
+                                final T eventData = deserialize(event, handler.eventClass());
                                 final UUID eventId = event.data().eventId();
                                 final int sequenceNumber = eventLink.number().value();
 
@@ -144,7 +174,45 @@ public class EventBusImpl extends AbstractEventBus {
         };
     }
 
-    private static Subscription wrap(final Closeable closeable) {
-        return closeable::close;
+    private Optional<ReadStreamEventsCompleted> readEventsFromStream(
+            final String streamId,
+            final Optional<EventNumber.Exact> start,
+            final int count) {
+        try {
+            final ReadStreamEventsCompleted result = Await.result(esConnection.readStreamEventsForward(
+                    streamId,
+                    start.map(exact -> exact.copy(exact.value() + 1)).orElse(null),
+                    count,
+                    false,
+                    null), Duration.Inf());
+            return result.events().isEmpty() ? Optional.empty() : Optional.of(result);
+        } catch (final StreamNotFoundException e) {
+            return Optional.empty();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Event deserialize(final eventstore.Event event) {
+        return deserialize(event, eventClassFrom(event));
+    }
+
+    private <T extends Event> T deserialize(final eventstore.Event event, final Class<T> eventClass) {
+        final String eventJson = event.data().data().value().utf8String();
+        try {
+            return objectMapper.readValue(eventJson, eventClass);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Class<? extends Event> eventClassFrom(final eventstore.Event event) {
+        final String metadataJson = event.data().metadata().value().utf8String();
+        try {
+            final EventMetadata metadata = objectMapper.readValue(metadataJson, EventMetadata.class);
+            return (Class<? extends Event>) Class.forName(metadata.getClassName());
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

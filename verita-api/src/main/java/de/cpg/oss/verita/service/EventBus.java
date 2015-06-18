@@ -17,4 +17,6 @@ public interface EventBus {
     <T extends Event> Subscription subscribeToStartingFrom(EventHandler<T> handler, int sequenceNumber);
 
     void append(EventHandlerInterceptor interceptor);
+
+    Iterable<Event> eventStreamOf(Class<? extends AggregateRoot> aggregateRootClass, UUID id);
 }

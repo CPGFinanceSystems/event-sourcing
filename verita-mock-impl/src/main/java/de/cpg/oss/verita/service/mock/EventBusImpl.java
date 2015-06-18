@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class EventBusImpl extends AbstractEventBus implements DomainAwareEventBus {
+public class EventBusImpl extends AbstractEventBus {
 
     private final Map<String, EventHandler> subscriptions;
     private final Map<String, List<Event>> eventStreams;
@@ -80,7 +80,11 @@ public class EventBusImpl extends AbstractEventBus implements DomainAwareEventBu
     }
 
     @Override
-    public <T extends AggregateRoot> List<Event> eventListOf(final Class<T> aggregateRootClass, final UUID id) {
+    public Iterable<Event> eventStreamOf(final Class<? extends AggregateRoot> aggregateRootClass, final UUID id) {
+        return eventListOf(aggregateRootClass, id);
+    }
+
+    private List<Event> eventListOf(final Class<? extends AggregateRoot> aggregateRootClass, final UUID id) {
         final String key = aggregateRootClass.getSimpleName().concat("-").concat(id.toString());
         domainStreams.putIfAbsent(key, new ArrayList<>());
         return domainStreams.get(key);

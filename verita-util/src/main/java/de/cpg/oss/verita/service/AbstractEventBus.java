@@ -3,6 +3,7 @@ package de.cpg.oss.verita.service;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
 import de.cpg.oss.verita.event.EventHandlerInterceptor;
+import de.cpg.oss.verita.event.EventHandlerInterceptor.Decision;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -32,7 +33,7 @@ public abstract class AbstractEventBus implements EventBus {
             log.debug("{}: handle event {} with ID {} and sequence number {}",
                     eventHandler.getClass().getSimpleName(), event, eventId, sequenceNumber);
             for (final EventHandlerInterceptor interceptor : interceptors) {
-                if (!interceptor.beforeHandle(event, eventId, sequenceNumber)) {
+                if (interceptor.beforeHandle(event, eventId, sequenceNumber).equals(Decision.STOP)) {
                     log.debug("Processing of event {} stopped after interceptor {}",
                             event.getClass().getSimpleName(),
                             interceptor.getClass().getSimpleName());
@@ -46,5 +47,9 @@ public abstract class AbstractEventBus implements EventBus {
             log.error("Unknown error in event handler " + eventHandler.getClass().getSimpleName(), e);
             eventHandler.onError(e);
         }
+    }
+
+    protected void afterSubscribeTo(final EventHandler<? extends Event> eventHandler) {
+        interceptors.stream().forEach(interceptor -> interceptor.afterSubscribeTo(eventHandler));
     }
 }

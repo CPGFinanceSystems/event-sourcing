@@ -1,3 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.cpg.oss.verita.configuration.event_store.EventStoreAutoConfiguration,\
-de.cpg.oss.verita.configuration.mock.MockAutoConfiguration
+de.cpg.oss.verita.configuration.event_store.VeritaEventStoreAutoConfiguration,\
+de.cpg.oss.verita.configuration.mock.VeritaMockAutoConfiguration

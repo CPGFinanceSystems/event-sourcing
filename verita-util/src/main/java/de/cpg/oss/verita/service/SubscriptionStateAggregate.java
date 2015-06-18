@@ -6,6 +6,9 @@ import de.cpg.oss.verita.event.SubscriptionCreated;
 import de.cpg.oss.verita.event.SubscriptionUpdated;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -13,8 +16,8 @@ public class SubscriptionStateAggregate implements SubscriptionState, AggregateR
     private static final long serialVersionUID = 1L;
 
     private UUID id;
-    private UUID lastEventId;
-    private int lastSequenceNumber;
+    private String name;
+    private final Map<Integer, UUID> sequenceNumberToEventIdMap = new HashMap<>();
 
     public SubscriptionStateAggregate(final SubscriptionCreated createEvent) {
         apply(createEvent);
@@ -29,21 +32,23 @@ public class SubscriptionStateAggregate implements SubscriptionState, AggregateR
     public void apply(final Event event) {
         if (event instanceof SubscriptionCreated) {
             final SubscriptionCreated createEvent = (SubscriptionCreated) event;
-            this.id = createEvent.getSubscriptionId();
+            this.id = createEvent.getId();
+            this.name = createEvent.getName();
         } else if (event instanceof SubscriptionUpdated) {
             final SubscriptionUpdated updateEvent = (SubscriptionUpdated) event;
-            this.lastEventId = updateEvent.getEventId();
-            this.lastSequenceNumber = updateEvent.getSequenceNumber();
+            sequenceNumberToEventIdMap.put(updateEvent.getSequenceNumber(), updateEvent.getEventId());
         }
     }
 
     @Override
-    public UUID lastEventId() {
-        return lastEventId;
+    public Optional<UUID> eventIdFor(final int sequenceNumber) {
+        return Optional.ofNullable(sequenceNumberToEventIdMap.get(sequenceNumber));
     }
 
     @Override
     public int lastSequenceNumber() {
-        return lastSequenceNumber;
+        return sequenceNumberToEventIdMap.keySet().parallelStream()
+                .max(Integer::max)
+                .orElse(-1);
     }
 }

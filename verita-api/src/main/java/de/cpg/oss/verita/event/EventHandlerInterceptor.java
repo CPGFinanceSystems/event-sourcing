@@ -4,7 +4,14 @@ import java.util.UUID;
 
 public interface EventHandlerInterceptor {
 
-    boolean beforeHandle(Event event, UUID eventId, int sequenceNumber);
+    enum Decision {
+        PROCEEED,
+        STOP
+    }
+
+    Decision beforeHandle(Event event, UUID eventId, int sequenceNumber);
 
     void afterHandle(Event event, UUID eventId, int sequenceNumber);
+
+    void afterSubscribeTo(EventHandler<? extends Event> eventHandler);
 }

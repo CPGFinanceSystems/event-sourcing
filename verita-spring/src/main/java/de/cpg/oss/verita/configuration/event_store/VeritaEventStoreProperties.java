@@ -5,12 +5,10 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties(prefix = EventStoreProperties.CONFIG_PREFIX, ignoreUnknownFields = true)
-public class EventStoreProperties {
+@ConfigurationProperties(prefix = VeritaEventStoreProperties.CONFIG_PREFIX, ignoreUnknownFields = true)
+public class VeritaEventStoreProperties {
 
     public static final String CONFIG_PREFIX = VeritaProperties.CONFIG_PREFIX + ".eventstore";
-
-    private String applicationId;
 
     private final String username = "admin";
 

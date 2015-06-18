@@ -11,8 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractDomainRepositoryTest {
 
-    protected abstract EventBus eventBus();
-
     protected abstract DomainRepository domainRepository();
 
     @Test
@@ -32,10 +30,8 @@ public abstract class AbstractDomainRepositoryTest {
         final ToDoItemCreated createEvent = ToDoItemCreated.builder()
                 .id(todoItemId)
                 .description(description).build();
-        final ToDoItem toDoItem = new ToDoItem(createEvent);
 
-        assertThat(eventBus().publish(createEvent, toDoItem)).isPresent();
-        return todoItemId;
+        return domainRepository().save(ToDoItem.class, createEvent).id();
     }
 
     private ToDoItem findById(final UUID todoItemId) {
@@ -49,11 +45,6 @@ public abstract class AbstractDomainRepositoryTest {
     }
 
     private ToDoItem done(final ToDoItem toDoItem) {
-        assertThat(eventBus().publish(new ToDoItemDone(), toDoItem)).isPresent();
-        final ToDoItem updatedItem = domainRepository().findById(ToDoItem.class, toDoItem.id())
-                .orElseThrow(RuntimeException::new);
-        assertThat(updatedItem.isDone()).isTrue();
-
-        return toDoItem;
+        return domainRepository().update(toDoItem, new ToDoItemDone());
     }
 }

@@ -1,37 +1,69 @@
 package de.cpg.oss.verita.event;
 
+import com.fasterxml.uuid.StringArgGenerator;
+import de.cpg.oss.verita.service.DomainRepository;
 import de.cpg.oss.verita.service.SubscriptionState;
-import de.cpg.oss.verita.service.SubscriptionStateRepository;
+import de.cpg.oss.verita.service.SubscriptionStateAggregate;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
 
-    private final SubscriptionStateRepository subscriptionStateRepository;
+    private final String applicationId;
+    private final DomainRepository domainRepository;
+    private final StringArgGenerator uuidGenerator;
 
-    public SubscriptionStateInterceptor(final SubscriptionStateRepository subscriptionStateRepository) {
-        this.subscriptionStateRepository = subscriptionStateRepository;
+    public SubscriptionStateInterceptor(
+            final String applicationId,
+            final DomainRepository domainRepository,
+            final StringArgGenerator uuidGenerator) {
+        this.applicationId = applicationId;
+        this.domainRepository = domainRepository;
+        this.uuidGenerator = uuidGenerator;
     }
 
     @Override
-    public boolean beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
-        return true;
+    public Decision beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
+        final Optional<SubscriptionStateAggregate> subscriptionState = getSubscriptionState(event.getClass());
+        if (!subscriptionState.isPresent()) {
+            return Decision.PROCEEED;
+        }
+        return subscriptionState.get().eventIdFor(sequenceNumber)
+                .map(uuid -> Decision.STOP)
+                .orElse(Decision.PROCEEED);
     }
 
     @Override
     public void afterHandle(final Event event, final UUID eventId, final int sequenceNumber) {
-        subscriptionStateRepository.save(event.getClass(), new SubscriptionState() {
-            private static final long serialVersionUID = 1L;
+        domainRepository.update(
+                getSubscriptionState(event.getClass()).get(),
+                SubscriptionUpdated.builder()
+                        .eventId(eventId)
+                        .sequenceNumber(sequenceNumber)
+                        .build());
+    }
 
-            @Override
-            public UUID lastEventId() {
-                return eventId;
-            }
+    @Override
+    public void afterSubscribeTo(final EventHandler<? extends Event> eventHandler) {
+        if (!getSubscriptionState(eventHandler.eventClass()).isPresent()) {
+            final Event event = SubscriptionCreated.builder()
+                    .id(subscriptionIdOf(eventHandler.eventClass()))
+                    .name(subscriptionNameOf(eventHandler.eventClass()))
+                    .build();
+            domainRepository.save(SubscriptionStateAggregate.class, event);
+        }
+    }
 
-            @Override
-            public int lastSequenceNumber() {
-                return sequenceNumber;
-            }
-        });
+    public Optional<SubscriptionStateAggregate> getSubscriptionState(final Class<? extends Event> eventClass) {
+        return domainRepository.findById(SubscriptionStateAggregate.class, subscriptionIdOf(eventClass));
+    }
+
+    private UUID subscriptionIdOf(final Class<? extends Event> eventClass) {
+        return uuidGenerator.generate(subscriptionNameOf(eventClass));
+    }
+
+    private String subscriptionNameOf(final Class<? extends Event> eventClass) {
+        return applicationId.concat("-").concat(eventClass.getSimpleName());
     }
 }
