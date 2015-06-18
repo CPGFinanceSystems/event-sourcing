@@ -2,7 +2,6 @@ package de.cpg.oss.verita.event;
 
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.service.DomainRepository;
-import de.cpg.oss.verita.service.SubscriptionState;
 import de.cpg.oss.verita.service.SubscriptionStateAggregate;
 
 import java.util.Optional;
@@ -27,11 +26,11 @@ public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
     public Decision beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
         final Optional<SubscriptionStateAggregate> subscriptionState = getSubscriptionState(event.getClass());
         if (!subscriptionState.isPresent()) {
-            return Decision.PROCEEED;
+            return Decision.PROCEED;
         }
         return subscriptionState.get().eventIdFor(sequenceNumber)
                 .map(uuid -> Decision.STOP)
-                .orElse(Decision.PROCEEED);
+                .orElse(Decision.PROCEED);
     }
 
     @Override

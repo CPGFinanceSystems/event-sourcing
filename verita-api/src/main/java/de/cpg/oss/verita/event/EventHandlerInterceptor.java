@@ -5,7 +5,7 @@ import java.util.UUID;
 public interface EventHandlerInterceptor {
 
     enum Decision {
-        PROCEEED,
+        PROCEED,
         STOP
     }
 
