@@ -2,10 +2,11 @@ package de.cpg.oss.verita.event;
 
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.service.DomainRepository;
-import de.cpg.oss.verita.service.SubscriptionState;
 import de.cpg.oss.verita.service.SubscriptionStateAggregate;
 import de.cpg.oss.verita.test.ToDoItemCreated;
-import org.easymock.*;
+import org.easymock.EasyMockRule;
+import org.easymock.EasyMockSupport;
+import org.easymock.Mock;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
