@@ -2,8 +2,10 @@ package de.cpg.oss.verita.configuration.mock;
 
 import de.cpg.oss.verita.configuration.VeritaAutoConfiguration;
 import de.cpg.oss.verita.configuration.VeritaProperties;
+import de.cpg.oss.verita.service.BusController;
 import de.cpg.oss.verita.service.CommandBus;
 import de.cpg.oss.verita.service.EventBus;
+import de.cpg.oss.verita.service.mock.BusControllerImpl;
 import de.cpg.oss.verita.service.mock.CommandBusImpl;
 import de.cpg.oss.verita.service.mock.EventBusImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,6 +34,12 @@ public class VeritaMockAutoConfiguration {
         @ConditionalOnMissingBean
         public EventBus eventBus() {
             return new EventBusImpl();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public BusController busController() {
+            return new BusControllerImpl();
         }
     }
 }

@@ -1,4 +1,4 @@
-package de.cpg.oss.verita.service.event_store;
+package de.cpg.oss.verita.service;
 
 import java.util.concurrent.TimeUnit;
 

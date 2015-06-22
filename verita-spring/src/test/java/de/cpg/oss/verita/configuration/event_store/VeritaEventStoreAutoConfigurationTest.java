@@ -1,8 +1,8 @@
 package de.cpg.oss.verita.configuration.event_store;
 
+import de.cpg.oss.verita.service.BusController;
 import de.cpg.oss.verita.service.CommandBus;
 import de.cpg.oss.verita.service.EventBus;
-import de.cpg.oss.verita.service.event_store.BusController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -19,7 +19,7 @@ public class VeritaEventStoreAutoConfigurationTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    private final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
     @Before
     public void init() {
@@ -41,11 +41,11 @@ public class VeritaEventStoreAutoConfigurationTest {
     public void defaultBeans() throws Exception {
         assertNotNull(this.context.getBean(CommandBus.class));
         assertNotNull(this.context.getBean(EventBus.class));
+        assertNotNull(this.context.getBean(BusController.class));
     }
 
     @Test
     public void additionalBeansForEventStore() throws Exception {
-        assertNotNull(this.context.getBean(BusController.class));
         assertNotNull(this.context.getBean(VeritaEventStoreHealthIndicator.class));
     }
 }

@@ -1,6 +1,7 @@
 package de.cpg.oss.verita.service.event_store;
 
 import akka.actor.ActorSystem;
+import de.cpg.oss.verita.service.BusController;
 import scala.concurrent.duration.Duration;
 
 import java.util.concurrent.TimeUnit;

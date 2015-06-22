@@ -1,5 +1,6 @@
 package de.cpg.oss.verita.configuration.mock;
 
+import de.cpg.oss.verita.service.BusController;
 import de.cpg.oss.verita.service.CommandBus;
 import de.cpg.oss.verita.service.EventBus;
 import org.junit.After;
@@ -18,14 +19,14 @@ public class VeritaMockAutoConfigurationTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    private final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
     @Before
     public void init() {
         EnvironmentTestUtils.addEnvironment(this.context,
                 "verita.applicationId:VeritaTest");
         this.context.register(VeritaMockAutoConfiguration.class,
-                        PropertyPlaceholderAutoConfiguration.class);
+                PropertyPlaceholderAutoConfiguration.class);
         this.context.refresh();
     }
 
@@ -40,5 +41,6 @@ public class VeritaMockAutoConfigurationTest {
     public void defaultBeans() throws Exception {
         assertNotNull(this.context.getBean(CommandBus.class));
         assertNotNull(this.context.getBean(EventBus.class));
+        assertNotNull(this.context.getBean(BusController.class));
     }
 }
