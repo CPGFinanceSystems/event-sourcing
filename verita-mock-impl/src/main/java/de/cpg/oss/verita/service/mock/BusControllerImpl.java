@@ -14,8 +14,10 @@ public class BusControllerImpl implements BusController {
     @Override
     public void shutdown() {
         log.info("Shutdown mock bus implementation");
-        running.set(false);
-        running.notify();
+        synchronized (running) {
+            running.set(false);
+            running.notify();
+        }
     }
 
     @Override
@@ -25,11 +27,13 @@ public class BusControllerImpl implements BusController {
 
     @Override
     public void awaitTermination(final long timeout, final TimeUnit timeUnit) {
-        if (running.get()) {
-            try {
-                running.wait(timeUnit.toMillis(timeout));
-            } catch (final InterruptedException e) {
-                log.error("Wait interrupted", e);
+        synchronized (running) {
+            if (running.get()) {
+                try {
+                    running.wait(timeUnit.toMillis(timeout));
+                } catch (final InterruptedException e) {
+                    log.error("Wait interrupted", e);
+                }
             }
         }
     }
