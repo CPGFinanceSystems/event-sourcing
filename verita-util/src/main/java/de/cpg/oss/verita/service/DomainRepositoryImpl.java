@@ -20,9 +20,10 @@ public class DomainRepositoryImpl implements DomainRepository {
     public <T extends AggregateRoot> Optional<T> findById(final Class<T> aggregateRootClass, final UUID id) {
         try {
             final Iterable<Event> eventStream = eventBus.eventStreamOf(aggregateRootClass, id);
-            final Optional<T> aggregateRoot = Optional.ofNullable(eventStream.iterator().next())
-                    .map(first -> newInstanceOf(aggregateRootClass, first));
-            aggregateRoot.ifPresent(root -> eventStream.forEach(root::apply));
+            final Optional<T> aggregateRoot = eventStream.iterator().hasNext()
+                    ? Optional.of(newInstanceOf(aggregateRootClass, eventStream.iterator().next()))
+                    : Optional.empty();
+            aggregateRoot.ifPresent(root -> eventStream.iterator().forEachRemaining(root::apply));
             return aggregateRoot;
         } catch (final Exception e) {
             log.error(e.getMessage(), e);
