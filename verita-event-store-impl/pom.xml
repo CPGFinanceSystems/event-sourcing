@@ -106,6 +106,7 @@
                                 <goals>
                                     <goal>download</goal>
                                     <goal>start</goal>
+                                    <goal>post-start</goal>
                                     <goal>stop</goal>
                                 </goals>
                                 <configuration>
