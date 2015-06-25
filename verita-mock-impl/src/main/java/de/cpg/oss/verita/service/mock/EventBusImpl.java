@@ -76,6 +76,7 @@ public class EventBusImpl extends AbstractEventBus {
             }
         });
 
+        afterSubscribeTo(handler);
         return () -> subscriptions.remove(handler.eventClass().getSimpleName());
     }
 
