@@ -51,14 +51,12 @@ public class EventBusImpl extends AbstractEventBus {
     }
 
     @Override
-    public <T extends Event> Subscription subscribeTo(final EventHandler<T> handler) {
+    public Subscription subscribeTo(final EventHandler<? extends Event> handler) {
         return subscribeToStartingFrom(handler, 0);
     }
 
     @Override
-    public <T extends Event> Subscription subscribeToStartingFrom(
-            final EventHandler<T> handler,
-            final int sequenceNumber) {
+    public Subscription subscribeToStartingFrom(final EventHandler<? extends Event> handler, final int sequenceNumber) {
         final String key = handler.eventClass().getSimpleName();
 
         subscriptions.put(key, handler);
@@ -70,7 +68,7 @@ public class EventBusImpl extends AbstractEventBus {
             int counter = 0;
             for (final Event event : stream) {
                 if (counter > sequenceNumber) {
-                    handleEvent(handler, (T) event, UUID.randomUUID(), counter);
+                    handleEvent(handler, event, UUID.randomUUID(), counter);
                 }
                 counter++;
             }

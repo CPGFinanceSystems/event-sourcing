@@ -74,7 +74,7 @@ public class EventBusImpl extends AbstractEventBus {
     }
 
     @Override
-    public <T extends Event> Subscription subscribeTo(final EventHandler<T> handler) {
+    public Subscription subscribeTo(final EventHandler<? extends Event> handler) {
         final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {}", streamId);
         final Subscription subscription = wrap(esConnection.subscribeToStream(
@@ -87,7 +87,7 @@ public class EventBusImpl extends AbstractEventBus {
     }
 
     @Override
-    public <T extends Event> Subscription subscribeToStartingFrom(final EventHandler<T> handler, final int sequenceNumber) {
+    public Subscription subscribeToStartingFrom(final EventHandler<? extends Event> handler, final int sequenceNumber) {
         final String streamId = streamIdOf(handler.eventClass());
         log.info("Subscribed to stream {} starting from {}", streamId, sequenceNumber);
         final Subscription subscription = wrap(esConnection.subscribeToStreamFrom(

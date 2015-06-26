@@ -24,9 +24,9 @@ public abstract class AbstractEventBus implements EventBus {
         this.interceptors.add(interceptor);
     }
 
-    protected <T extends Event> void handleEvent(
-            final EventHandler<T> eventHandler,
-            final T event,
+    protected void handleEvent(
+            final EventHandler eventHandler,
+            final Event event,
             final UUID eventId,
             final int sequenceNumber) {
         try {
@@ -49,6 +49,6 @@ public abstract class AbstractEventBus implements EventBus {
     }
 
     protected void afterSubscribeTo(final EventHandler<? extends Event> eventHandler) {
-        interceptors.stream().forEach(interceptor -> interceptor.afterSubscribeTo(eventHandler));
+        interceptors.iterator().forEachRemaining(i-> i.afterSubscribeTo(eventHandler));
     }
 }
