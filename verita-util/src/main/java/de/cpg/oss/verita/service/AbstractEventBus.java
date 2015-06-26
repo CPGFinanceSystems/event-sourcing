@@ -41,8 +41,7 @@ public abstract class AbstractEventBus implements EventBus {
                 }
             }
             eventHandler.handle(event, eventId, sequenceNumber);
-            interceptors.parallelStream()
-                    .forEach(i -> i.afterHandle(event, eventId, sequenceNumber));
+            interceptors.iterator().forEachRemaining(i -> i.afterHandle(event, eventId, sequenceNumber));
         } catch (final Exception e) {
             log.error("Unknown error in event handler " + eventHandler.getClass().getSimpleName(), e);
             eventHandler.onError(e);

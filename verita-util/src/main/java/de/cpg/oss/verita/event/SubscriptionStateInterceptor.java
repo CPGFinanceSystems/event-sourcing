@@ -47,22 +47,19 @@ public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
     public void afterSubscribeTo(final EventHandler<? extends Event> eventHandler) {
         if (!getSubscriptionState(eventHandler.eventClass()).isPresent()) {
             final Event event = SubscriptionCreated.builder()
-                    .id(subscriptionIdOf(eventHandler.eventClass()))
-                    .name(subscriptionNameOf(eventHandler.eventClass()))
+                    .id(subscriptionIdOf(applicationId, eventHandler.eventClass()))
+                    .applicationId(applicationId)
+                    .eventClassName(eventHandler.eventClass().getSimpleName())
                     .build();
             domainRepository.save(SubscriptionStateAggregate.class, event);
         }
     }
 
     public Optional<SubscriptionStateAggregate> getSubscriptionState(final Class<? extends Event> eventClass) {
-        return domainRepository.findById(SubscriptionStateAggregate.class, subscriptionIdOf(eventClass));
+        return domainRepository.findById(SubscriptionStateAggregate.class, subscriptionIdOf(applicationId, eventClass));
     }
 
-    private UUID subscriptionIdOf(final Class<? extends Event> eventClass) {
-        return uuidGenerator.generate(subscriptionNameOf(eventClass));
-    }
-
-    private String subscriptionNameOf(final Class<? extends Event> eventClass) {
-        return applicationId.concat("-").concat(eventClass.getSimpleName());
+    private UUID subscriptionIdOf(final String applicationId, final Class<? extends Event> eventClass) {
+        return uuidGenerator.generate(SubscriptionCreated.subscriptionNameOf(applicationId, eventClass.getSimpleName()));
     }
 }

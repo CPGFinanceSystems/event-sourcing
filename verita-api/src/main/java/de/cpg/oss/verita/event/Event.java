@@ -1,6 +1,7 @@
 package de.cpg.oss.verita.event;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * Represents a persistent immutable event within the system - A business fact which happened in the past.
@@ -8,7 +9,15 @@ import java.io.Serializable;
  * {@link EventHandler}s.
  * An event is something which the system must be able to process from a business point of view since it represents
  * something which happened already in the past. Events can only be 'deleted' or 'undone' if another event with the
- * logical reverse operation is applied (for example this could be a <code>AccountStatementCorrectedEvent</code>).
+ * logical reverse operation is applied (for example this could be a <code>UserDeletedEvent</code>).
  */
 public interface Event extends Serializable {
+
+    /**
+     * Supply a unique logical identifier - for example in a <code>CreatedUserEvent</code> this could be the user's
+     * email address.
+     *
+     * @return A unique logical identifier for this event
+     */
+    String uniqueKey();
 }

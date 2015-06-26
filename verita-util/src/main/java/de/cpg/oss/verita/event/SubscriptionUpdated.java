@@ -16,6 +16,11 @@ public class SubscriptionUpdated implements Event {
     private final UUID eventId;
     private final int sequenceNumber;
 
+    @Override
+    public String uniqueKey() {
+        return eventId.toString();
+    }
+
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
     }

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.uuid.Generators;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
 import de.cpg.oss.verita.event.EventHandler;
@@ -52,8 +53,9 @@ public class EventBusImpl extends AbstractEventBus {
             return Optional.empty();
         }
 
-        final UUID eventId = UUID.randomUUID();
         final String eventType = event.getClass().getSimpleName();
+        final UUID eventId = Generators.nameBasedGenerator(aggregateRoot.id())
+                .generate(eventType.concat("-").concat(event.uniqueKey()));
         log.debug("Generated UUID {} for {}", eventId, eventType);
 
         final EventData eventData = new EventDataBuilder(eventType)
@@ -110,7 +112,7 @@ public class EventBusImpl extends AbstractEventBus {
                 start = readEventsFromStream(streamId, start, 100).map((completed) -> {
                     wholeStream.addAll(completed.eventsJava().stream()
                             .map(this::deserialize)
-                            .collect(Collectors.toSet()));
+                            .collect(Collectors.toList()));
                     return completed.lastEventNumber();
                 });
             } catch (final Exception e) {

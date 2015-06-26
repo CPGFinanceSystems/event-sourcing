@@ -17,6 +17,11 @@ public class ToDoItemCreated implements Event {
     private final UUID id;
     private final String description;
 
+    @Override
+    public String uniqueKey() {
+        return id.toString();
+    }
+
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
     }

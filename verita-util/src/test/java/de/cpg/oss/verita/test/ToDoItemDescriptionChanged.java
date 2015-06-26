@@ -8,4 +8,9 @@ public class ToDoItemDescriptionChanged implements Event {
     private static final long serialVersionUID = 1L;
 
     private final String description;
+
+    @Override
+    public String uniqueKey() {
+        return description;
+    }
 }
