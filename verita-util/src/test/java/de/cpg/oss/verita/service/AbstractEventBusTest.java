@@ -20,10 +20,11 @@ import static org.junit.Assert.fail;
 @Slf4j
 public abstract class AbstractEventBusTest {
 
-    protected abstract EventBus eventBus();
+    protected abstract EventBus newEventBus();
 
     @Test
     public void testPublishAndSubscribe() throws Exception {
+        final EventBus eventBus = newEventBus();
         final AtomicBoolean condition = new AtomicBoolean();
         final String description = "TODO item";
 
@@ -46,11 +47,11 @@ public abstract class AbstractEventBusTest {
         };
 
 
-        try (Subscription ignored = eventBus().subscribeTo(eventHandler)) {
+        try (Subscription ignored = eventBus.subscribeTo(eventHandler)) {
             final ToDoItemCreated event = ToDoItemCreated.builder()
                     .description(description)
                     .id(UUID.randomUUID()).build();
-            final Optional<UUID> eventId = eventBus().publish(event, new ToDoItem(event));
+            final Optional<UUID> eventId = eventBus.publish(event, new ToDoItem(event));
             assertThat(eventId).isPresent();
 
             synchronized (condition) {
@@ -64,7 +65,8 @@ public abstract class AbstractEventBusTest {
 
     @Test
     public void testInterceptor() throws Exception {
-        eventBus().append(new EventHandlerInterceptor() {
+        final EventBus eventBus = newEventBus();
+        eventBus.append(new EventHandlerInterceptor() {
             @Override
             public Decision beforeHandle(final Event event, final UUID eventId, final int sequenceNumber) {
                 return Decision.STOP;
@@ -79,7 +81,7 @@ public abstract class AbstractEventBusTest {
             }
         });
 
-        try (Subscription ignored = eventBus().subscribeTo(new EventHandler<ToDoItemCreated>() {
+        try (Subscription ignored = eventBus.subscribeTo(new EventHandler<ToDoItemCreated>() {
             @Override
             public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
                 fail("Expected call of EventHandler to be blocked by interceptor");
@@ -96,12 +98,13 @@ public abstract class AbstractEventBusTest {
             }
         })) {
             final ToDoItemCreated event = ToDoItemCreated.builder().description("TODO").id(UUID.randomUUID()).build();
-            eventBus().publish(event, new ToDoItem(event));
+            eventBus.publish(event, new ToDoItem(event));
         }
     }
 
     @Test
     public void testPublishAndSubscribeStartingFrom() throws Exception {
+        final EventBus eventBus = newEventBus();
         final AtomicBoolean condition = new AtomicBoolean();
 
         final int expectedEventCount = 3;
@@ -111,7 +114,7 @@ public abstract class AbstractEventBusTest {
                     .description("New TODO item").build();
             final ToDoItem toDoItem = new ToDoItem(createEvent);
 
-            assertThat(eventBus().publish(createEvent, toDoItem)).isPresent();
+            assertThat(eventBus.publish(createEvent, toDoItem)).isPresent();
         }
 
         final EventHandler<ToDoItemCreated> eventHandler = new AbstractEventHandler<ToDoItemCreated>(ToDoItemCreated.class) {
@@ -134,7 +137,7 @@ public abstract class AbstractEventBusTest {
             }
         };
 
-        try (Subscription ignored = eventBus().subscribeToStartingFrom(eventHandler, -1)) {
+        try (Subscription ignored = eventBus.subscribeToStartingFrom(eventHandler, -1)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(1));
                 if (!condition.get()) {
@@ -146,10 +149,11 @@ public abstract class AbstractEventBusTest {
 
     @Test
     public void testPersistentSubscription() throws Exception {
-        final EventHandler<ToDoItemCreated> doNothingHandler = new AbstractEventHandler<ToDoItemCreated>(ToDoItemCreated.class) {
+        final EventBus eventBus = newEventBus();
+        final EventHandler<ToDoItemDone> doNothingHandler = new AbstractEventHandler<ToDoItemDone>(ToDoItemDone.class) {
             @Override
-            public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
-                log.info("Handle event {} with sequence number {}", event, sequenceNumber);
+            public void handle(final ToDoItemDone event, final UUID eventId, final int sequenceNumber) throws Exception {
+                log.info("NothingHandler: event {} with sequence number {}", event, sequenceNumber);
             }
 
             @Override
@@ -157,14 +161,14 @@ public abstract class AbstractEventBusTest {
             }
         };
 
-        final DomainRepository domainRepository = new DomainRepositoryImpl(eventBus());
+        final DomainRepository domainRepository = new DomainRepositoryImpl(eventBus);
         final SubscriptionStateInterceptor interceptor = new SubscriptionStateInterceptor(
                 "VeritaTest",
                 domainRepository,
                 Generators.nameBasedGenerator());
-        eventBus().append(interceptor);
+        eventBus.append(interceptor);
 
-        try (final Subscription ignored = eventBus().subscribeToStartingFrom(doNothingHandler, -1)) {
+        try (final Subscription ignored = eventBus.subscribeToStartingFrom(doNothingHandler, -1)) {
             final ToDoItem toDoItem = domainRepository.save(ToDoItem.class, ToDoItemCreated.builder()
                     .id(UUID.randomUUID())
                     .description("Important thing")
@@ -173,15 +177,12 @@ public abstract class AbstractEventBusTest {
 
             Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 
-            final Optional<SubscriptionStateAggregate> subscriptionState = interceptor.getSubscriptionState(ToDoItemCreated.class);
+            final Optional<SubscriptionStateAggregate> subscriptionState = interceptor.getSubscriptionState(ToDoItemDone.class);
             log.info("Got {}", subscriptionState);
 
             assertThat(subscriptionState).isPresent();
-            final int lastSequenceNumber = subscriptionState.get().lastSequenceNumber();
-            assertThat(lastSequenceNumber).isGreaterThan(-1);
-            for (int i = 0; i < lastSequenceNumber; i++) {
-                assertThat(subscriptionState.get().eventIdFor(i)).isPresent();
-            }
+            assertThat(subscriptionState.get().lastSequenceNumber()).isEqualTo(0);
+            assertThat(subscriptionState.get().eventIdFor(0)).isPresent();
         }
     }
 }

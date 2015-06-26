@@ -7,12 +7,9 @@ import org.junit.BeforeClass;
 
 public class EventBusIT extends AbstractEventBusTest {
 
-    private static EventBus eventBus;
-
     @BeforeClass
     public static void setup() {
         TestUtil.setup();
-        eventBus = new EventBusImpl(TestUtil.esConnection(), TestUtil.actorSystem(), TestUtil.objectMapper());
     }
 
     @AfterClass
@@ -21,7 +18,7 @@ public class EventBusIT extends AbstractEventBusTest {
     }
 
     @Override
-    protected EventBus eventBus() {
-        return eventBus;
+    protected EventBus newEventBus() {
+        return new EventBusImpl(TestUtil.esConnection(), TestUtil.actorSystem(), TestUtil.objectMapper());
     }
 }
