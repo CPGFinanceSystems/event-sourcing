@@ -31,4 +31,11 @@ public interface CommandHandler<T extends Command> {
      * @param throwable The error which occurred
      */
     void onError(Throwable throwable);
+
+    /**
+     * Get type of {@link Command}s this handler is responsible for
+     *
+     * @return Type of command
+     */
+    Class<T> commandClass();
 }

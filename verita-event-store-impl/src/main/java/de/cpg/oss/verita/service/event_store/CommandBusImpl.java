@@ -64,26 +64,26 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public <T extends Command> Closeable subscribeTo(final Class<T> commandClass, final CommandHandler<T> handler) {
+    public Closeable subscribeTo(final CommandHandler<? extends Command> handler) {
         return esConnection.subscribeToStream(
-                queueNameFor(commandClass),
-                asObserver(handler, commandClass),
+                queueNameFor(handler.commandClass()),
+                asObserver(handler),
                 false,
                 null);
     }
 
     @Override
-    public <T extends Command> Closeable subscribeToStartingFrom(final Class<T> commandClass, final CommandHandler<T> handler, final int sequenceNumber) {
+    public Closeable subscribeToStartingFrom(final CommandHandler<? extends Command> handler, final int sequenceNumber) {
         return esConnection.subscribeToStreamFrom(
-                queueNameFor(commandClass),
-                asObserver(handler, commandClass),
+                queueNameFor(handler.commandClass()),
+                asObserver(handler),
                 sequenceNumber >= 0 ? sequenceNumber : null,
                 false,
                 null);
     }
 
     @Override
-    public <T extends Command> boolean deleteQueueFor(final Class<T> commandClass) {
+    public boolean deleteQueueFor(final Class<? extends Command> commandClass) {
         try {
             Await.result(esConnection.deleteStream(queueNameFor(commandClass), null, false, null), Duration.Inf());
             return true;
@@ -93,7 +93,7 @@ public class CommandBusImpl implements CommandBus {
         }
     }
 
-    private <T extends Command> SubscriptionObserver<Event> asObserver(final CommandHandler<T> handler, final Class<T> commandClass) {
+    private SubscriptionObserver<Event> asObserver(final CommandHandler handler) {
         return new SubscriptionObserver<Event>() {
             @Override
             public void onLiveProcessingStart(final Closeable closeable) {
@@ -102,7 +102,9 @@ public class CommandBusImpl implements CommandBus {
             @Override
             public void onEvent(final Event event, final Closeable closeable) {
                 try {
-                    final T command = objectMapper.readValue(event.data().data().value().utf8String(), commandClass);
+                    final Command command = (Command) objectMapper.readValue(
+                            event.data().data().value().utf8String(),
+                            handler.commandClass());
                     handler.handle(command, event.data().eventId(), event.number().value());
                 } catch (final Exception e) {
                     onError(e);
@@ -120,7 +122,7 @@ public class CommandBusImpl implements CommandBus {
         };
     }
 
-    private static <T extends Command> String queueNameFor(final Class<T> commandClass) {
+    private static String queueNameFor(final Class<? extends Command> commandClass) {
         return commandClass.getSimpleName().concat("Queue");
     }
 }

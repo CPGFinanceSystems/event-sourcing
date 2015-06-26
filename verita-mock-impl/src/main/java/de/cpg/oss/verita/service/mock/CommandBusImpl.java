@@ -55,16 +55,15 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public <T extends Command> Closeable subscribeTo(final Class<T> commandClass, final CommandHandler<T> handler) {
-        return subscribeToStartingFrom(commandClass, handler, -1);
+    public Closeable subscribeTo(final CommandHandler<? extends Command> handler) {
+        return subscribeToStartingFrom(handler, -1);
     }
 
     @Override
-    public <T extends Command> Closeable subscribeToStartingFrom(
-            final Class<T> commandClass,
-            final CommandHandler<T> handler,
+    public Closeable subscribeToStartingFrom(
+            final CommandHandler<? extends Command> handler,
             final int sequenceNumber) {
-        final String key = commandClass.getSimpleName();
+        final String key = handler.commandClass().getSimpleName();
 
         subscriptions.put(key, handler);
         offsets.put(key, sequenceNumber);
@@ -75,24 +74,24 @@ public class CommandBusImpl implements CommandBus {
             int counter = 0;
             for (final Command command : stream) {
                 if (counter > sequenceNumber) {
-                    handleCommand(handler, (T) command, uuidGenerator.generate(command.uniqueKey()), counter);
+                    handleCommand(handler, command, uuidGenerator.generate(command.uniqueKey()), counter);
                 }
                 counter++;
             }
         });
-        return () -> subscriptions.remove(commandClass.getSimpleName());
+        return () -> subscriptions.remove(key);
     }
 
     @Override
-    public <T extends Command> boolean deleteQueueFor(final Class<T> commandClass) {
+    public boolean deleteQueueFor(final Class<? extends Command> commandClass) {
         streams.remove(commandClass.getSimpleName());
         offsets.remove(commandClass.getSimpleName());
         return true;
     }
 
-    private static <T extends Command> void handleCommand(
-            final CommandHandler<T> commandHandler,
-            final T command,
+    private static void handleCommand(
+            final CommandHandler commandHandler,
+            final Command command,
             final UUID commandId,
             final int sequenceNumber) {
         try {

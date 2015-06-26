@@ -1,5 +1,6 @@
 package de.cpg.oss.verita.service;
 
+import de.cpg.oss.verita.command.AbstractCommandHandler;
 import de.cpg.oss.verita.command.Command;
 import de.cpg.oss.verita.command.CommandHandler;
 import de.cpg.oss.verita.test.TestCommand;
@@ -37,7 +38,7 @@ public abstract class AbstractCommandBusTest {
         final AtomicBoolean condition = new AtomicBoolean();
         final String uniqueKey = UUID.randomUUID().toString();
 
-        final CommandHandler<TestCommand> commandHandler = new CommandHandler<TestCommand>() {
+        final CommandHandler<TestCommand> commandHandler = new AbstractCommandHandler<TestCommand>(TestCommand.class) {
 
             @Override
             public void handle(final TestCommand command, final UUID commandId, final int sequenceNumber) throws Exception {
@@ -57,7 +58,7 @@ public abstract class AbstractCommandBusTest {
         };
 
 
-        try (Closeable ignored = commandBus().subscribeTo(TestCommand.class, commandHandler)) {
+        try (Closeable ignored = commandBus().subscribeTo(commandHandler)) {
             final Command command = new TestCommand(uniqueKey);
             final Optional<UUID> commandId = commandBus().publish(command);
             assertThat(commandId).isPresent();
@@ -79,7 +80,7 @@ public abstract class AbstractCommandBusTest {
             assertThat(commandBus().publish(new TestCommand(UUID.randomUUID().toString()))).isPresent();
         }
 
-        final CommandHandler<TestCommand> commandHandler = new CommandHandler<TestCommand>() {
+        final CommandHandler<TestCommand> commandHandler = new AbstractCommandHandler<TestCommand>(TestCommand.class) {
             final AtomicInteger commandCounter = new AtomicInteger();
 
             @Override
@@ -99,7 +100,7 @@ public abstract class AbstractCommandBusTest {
             }
         };
 
-        try (Closeable ignored = commandBus().subscribeToStartingFrom(TestCommand.class, commandHandler, -1)) {
+        try (Closeable ignored = commandBus().subscribeToStartingFrom(commandHandler, -1)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(2));
                 if (!condition.get()) {

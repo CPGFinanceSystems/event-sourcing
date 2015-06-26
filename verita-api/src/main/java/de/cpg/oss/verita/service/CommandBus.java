@@ -7,13 +7,43 @@ import java.io.Closeable;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Command bus implementing the publish and subscribe pattern in a persistent way
+ */
 public interface CommandBus {
 
+    /**
+     * Publish and persist a command
+     *
+     * @param command The command to publish
+     * @return The unique identifier for this command or <code>Optional.none()</code> if this command was already
+     * published
+     */
     Optional<UUID> publish(Command command);
 
-    <T extends Command> Closeable subscribeTo(Class<T> commandClass, CommandHandler<T> handler);
+    /**
+     * Subscribe an command handler to commands of the given type
+     *
+     * @param handler The command handler
+     * @return The subscription
+     */
+    Closeable subscribeTo(CommandHandler<? extends Command> handler);
 
-    <T extends Command> Closeable subscribeToStartingFrom(Class<T> commandClass, CommandHandler<T> handler, int sequenceNumber);
+    /**
+     * Subscribe an command handler to commands of the given type starting at the supplied sequence number (excluding)
+     *
+     * @param handler        The command handler
+     * @param sequenceNumber The sequence number to start from excluding (i. e. `1` would implicate to start with the
+     *                       third command in the queue since sequence numbers `0` and `1` are skipped)
+     * @return The subscription
+     */
+    Closeable subscribeToStartingFrom(CommandHandler<? extends Command> handler, int sequenceNumber);
 
-    <T extends Command> boolean deleteQueueFor(Class<T> commandClass);
+    /**
+     * Delete the persistent queue for the command of the given type
+     *
+     * @param commandClass The type of command to delete the queue for
+     * @return <code>true</code> if successful, <code>false</code> otherwise
+     */
+    boolean deleteQueueFor(Class<? extends Command> commandClass);
 }
