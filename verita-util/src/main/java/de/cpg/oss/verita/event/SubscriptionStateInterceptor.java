@@ -4,14 +4,17 @@ import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.service.DomainRepository;
 import de.cpg.oss.verita.service.SubscriptionStateAggregate;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
 
     private final String applicationId;
     private final DomainRepository domainRepository;
     private final StringArgGenerator uuidGenerator;
+    private final Map<String, SubscriptionStateAggregate> subscriptionStates = new ConcurrentHashMap<>();
 
     public SubscriptionStateInterceptor(
             final String applicationId,
@@ -35,12 +38,12 @@ public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
 
     @Override
     public void afterHandle(final Event event, final UUID eventId, final int sequenceNumber) {
-        domainRepository.update(
+        subscriptionStates.put(event.getClass().getSimpleName(), domainRepository.update(
                 getSubscriptionState(event.getClass()).get(),
                 SubscriptionUpdated.builder()
                         .eventId(eventId)
                         .sequenceNumber(sequenceNumber)
-                        .build());
+                        .build()));
     }
 
     @Override
@@ -51,12 +54,22 @@ public class SubscriptionStateInterceptor implements EventHandlerInterceptor {
                     .applicationId(applicationId)
                     .eventClassName(eventHandler.eventClass().getSimpleName())
                     .build();
-            domainRepository.save(SubscriptionStateAggregate.class, event);
+            subscriptionStates.put(
+                    eventHandler.eventClass().getSimpleName(),
+                    domainRepository.save(SubscriptionStateAggregate.class, event));
         }
     }
 
     public Optional<SubscriptionStateAggregate> getSubscriptionState(final Class<? extends Event> eventClass) {
-        return domainRepository.findById(SubscriptionStateAggregate.class, subscriptionIdOf(applicationId, eventClass));
+        Optional<SubscriptionStateAggregate> aggregate = Optional.ofNullable(subscriptionStates.get(eventClass.getSimpleName()));
+        if (aggregate.isPresent()) {
+            return aggregate;
+        }
+        aggregate = domainRepository.findById(SubscriptionStateAggregate.class, subscriptionIdOf(applicationId, eventClass));
+        if (aggregate.isPresent()) {
+            subscriptionStates.put(eventClass.getSimpleName(), aggregate.get());
+        }
+        return aggregate;
     }
 
     private UUID subscriptionIdOf(final String applicationId, final Class<? extends Event> eventClass) {
