@@ -1,11 +1,11 @@
 package de.cpg.oss.verita.service;
 
-import de.cpg.oss.verita.event.AbstractEventHandler;
-import de.cpg.oss.verita.event.Event;
-import de.cpg.oss.verita.event.EventHandler;
-import de.cpg.oss.verita.event.EventHandlerInterceptor;
+import com.fasterxml.uuid.Generators;
+import de.cpg.oss.verita.event.*;
 import de.cpg.oss.verita.test.ToDoItem;
 import de.cpg.oss.verita.test.ToDoItemCreated;
+import de.cpg.oss.verita.test.ToDoItemDone;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.util.Optional;
@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+@Slf4j
 public abstract class AbstractEventBusTest {
 
     protected abstract EventBus eventBus();
@@ -139,6 +140,47 @@ public abstract class AbstractEventBusTest {
                 if (!condition.get()) {
                     fail("Timout waiting for expected events. Check if $et projection is enabled in event store.");
                 }
+            }
+        }
+    }
+
+    @Test
+    public void testPersistentSubscription() throws Exception {
+        final EventHandler<ToDoItemCreated> doNothingHandler = new AbstractEventHandler<ToDoItemCreated>(ToDoItemCreated.class) {
+            @Override
+            public void handle(final ToDoItemCreated event, final UUID eventId, final int sequenceNumber) throws Exception {
+                log.info("Handle event {} with sequence number {}", event, sequenceNumber);
+            }
+
+            @Override
+            public void onError(final Throwable throwable) {
+            }
+        };
+
+        final DomainRepository domainRepository = new DomainRepositoryImpl(eventBus());
+        final SubscriptionStateInterceptor interceptor = new SubscriptionStateInterceptor(
+                "VeritaTest",
+                domainRepository,
+                Generators.nameBasedGenerator());
+        eventBus().append(interceptor);
+
+        try (final Subscription ignored = eventBus().subscribeToStartingFrom(doNothingHandler, -1)) {
+            final ToDoItem toDoItem = domainRepository.save(ToDoItem.class, ToDoItemCreated.builder()
+                    .id(UUID.randomUUID())
+                    .description("Important thing")
+                    .build());
+            domainRepository.update(toDoItem, new ToDoItemDone());
+
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+            final Optional<SubscriptionStateAggregate> subscriptionState = interceptor.getSubscriptionState(ToDoItemCreated.class);
+            log.info("Got {}", subscriptionState);
+
+            assertThat(subscriptionState).isPresent();
+            final int lastSequenceNumber = subscriptionState.get().lastSequenceNumber();
+            assertThat(lastSequenceNumber).isGreaterThan(-1);
+            for (int i = 0; i < lastSequenceNumber; i++) {
+                assertThat(subscriptionState.get().eventIdFor(i)).isPresent();
             }
         }
     }
