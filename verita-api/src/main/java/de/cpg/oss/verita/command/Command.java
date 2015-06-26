@@ -11,7 +11,7 @@ import java.io.Serializable;
 public interface Command extends Serializable {
 
     /**
-     * Supply a unique logical identifier - for example for a <code>CreateUserCommand</code> this could be the user's
+     * Supply a unique logical identifier - for example in a <code>CreateUserCommand</code> this could be the user's
      * email address.
      *
      * @return A unique logical identifier for this command
