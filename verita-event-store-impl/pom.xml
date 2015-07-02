@@ -110,9 +110,9 @@
                                     <goal>stop</goal>
                                 </goals>
                                 <configuration>
-                                    <postStartCommand>
+                                    <post-start-command>
                                         ${project.basedir}/src/test/resources/enable-projections.sh
-                                    </postStartCommand>
+                                    </post-start-command>
                                 </configuration>
                             </execution>
                         </executions>
