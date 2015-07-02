@@ -3,10 +3,7 @@ package de.cpg.oss.verita.configuration;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.event.SubscriptionStateInterceptor;
-import de.cpg.oss.verita.service.DomainRepository;
-import de.cpg.oss.verita.service.DomainRepositoryImpl;
-import de.cpg.oss.verita.service.EventBus;
-import de.cpg.oss.verita.service.EventHandlerRegistry;
+import de.cpg.oss.verita.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,6 +34,12 @@ public class VeritaAutoConfiguration {
                 final DomainRepository domainRepository,
                 final StringArgGenerator uuidGenerator) {
             return new SubscriptionStateInterceptor(this.properties.getApplicationId(), domainRepository, uuidGenerator);
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public CommandHandlerRegistry commandHandlerRegistry(final CommandBus commandBus) {
+            return new CommandHandlerRegistry(commandBus);
         }
 
         @Bean
