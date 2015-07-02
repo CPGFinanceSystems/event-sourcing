@@ -56,29 +56,9 @@ public class CommandBusImpl implements CommandBus {
 
     @Override
     public Closeable subscribeTo(final CommandHandler<? extends Command> handler) {
-        return subscribeToStartingFrom(handler, -1);
-    }
-
-    @Override
-    public Closeable subscribeToStartingFrom(
-            final CommandHandler<? extends Command> handler,
-            final int sequenceNumber) {
         final String key = handler.commandClass().getSimpleName();
-
         subscriptions.put(key, handler);
-        offsets.put(key, sequenceNumber);
-
         log.info("Start subscription for {} with {}", key, handler.getClass().getSimpleName());
-
-        Optional.ofNullable(streams.get(key)).ifPresent((stream) -> {
-            int counter = 0;
-            for (final Command command : stream) {
-                if (counter > sequenceNumber) {
-                    handleCommand(handler, command, uuidGenerator.generate(command.uniqueKey()), counter);
-                }
-                counter++;
-            }
-        });
         return () -> subscriptions.remove(key);
     }
 

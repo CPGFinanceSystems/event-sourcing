@@ -73,16 +73,6 @@ public class CommandBusImpl implements CommandBus {
     }
 
     @Override
-    public Closeable subscribeToStartingFrom(final CommandHandler<? extends Command> handler, final int sequenceNumber) {
-        return esConnection.subscribeToStreamFrom(
-                queueNameFor(handler.commandClass()),
-                asObserver(handler),
-                sequenceNumber >= 0 ? sequenceNumber : null,
-                false,
-                null);
-    }
-
-    @Override
     public boolean deleteQueueFor(final Class<? extends Command> commandClass) {
         try {
             Await.result(esConnection.deleteStream(queueNameFor(commandClass), null, false, null), Duration.Inf());

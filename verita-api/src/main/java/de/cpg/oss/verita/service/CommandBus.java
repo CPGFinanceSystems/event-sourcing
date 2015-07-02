@@ -30,16 +30,6 @@ public interface CommandBus {
     Closeable subscribeTo(CommandHandler<? extends Command> handler);
 
     /**
-     * Subscribe an command handler to commands of the given type starting at the supplied sequence number (excluding)
-     *
-     * @param handler        The command handler
-     * @param sequenceNumber The sequence number to start from excluding (i. e. `1` would implicate to start with the
-     *                       third command in the queue since sequence numbers `0` and `1` are skipped)
-     * @return The subscription
-     */
-    Closeable subscribeToStartingFrom(CommandHandler<? extends Command> handler, int sequenceNumber);
-
-    /**
      * Delete the persistent queue for the command of the given type
      *
      * @param commandClass The type of command to delete the queue for

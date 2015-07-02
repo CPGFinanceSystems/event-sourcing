@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -63,44 +62,6 @@ public abstract class AbstractCommandBusTest {
             final Optional<UUID> commandId = commandBus().publish(command);
             assertThat(commandId).isPresent();
 
-            synchronized (condition) {
-                condition.wait(TimeUnit.SECONDS.toMillis(2));
-                if (!condition.get()) {
-                    fail("Timeout waiting for expected commands!");
-                }
-            }
-        }
-    }
-
-    @Test
-    public void testPublishAndSubscribeStartingFrom() throws Exception {
-        final AtomicBoolean condition = new AtomicBoolean();
-        final int expectedCommandCount = 3;
-        for (int i = 0; i < expectedCommandCount; i++) {
-            assertThat(commandBus().publish(new TestCommand(UUID.randomUUID().toString()))).isPresent();
-        }
-
-        final CommandHandler<TestCommand> commandHandler = new AbstractCommandHandler<TestCommand>(TestCommand.class) {
-            final AtomicInteger commandCounter = new AtomicInteger();
-
-            @Override
-            public void handle(final TestCommand command, final UUID commandId, final int sequenceNumber) throws Exception {
-                final int count = commandCounter.incrementAndGet();
-                synchronized (condition) {
-                    if (expectedCommandCount == count) {
-                        condition.set(true);
-                        condition.notify();
-                    }
-                }
-            }
-
-            @Override
-            public void onError(final Throwable throwable) {
-                fail(throwable.getMessage());
-            }
-        };
-
-        try (Closeable ignored = commandBus().subscribeToStartingFrom(commandHandler, -1)) {
             synchronized (condition) {
                 condition.wait(TimeUnit.SECONDS.toMillis(2));
                 if (!condition.get()) {
