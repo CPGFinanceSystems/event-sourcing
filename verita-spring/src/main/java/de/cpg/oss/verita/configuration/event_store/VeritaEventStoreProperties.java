@@ -10,13 +10,13 @@ public class VeritaEventStoreProperties {
 
     public static final String CONFIG_PREFIX = VeritaProperties.CONFIG_PREFIX + ".eventstore";
 
-    private final String username = "admin";
+    private String username = "admin";
 
-    private final String password = "changeit";
+    private String password = "changeit";
 
-    private final String hostname = "localhost";
+    private String hostname = "localhost";
 
-    private final int port = 1113;
+    private int port = 1113;
 
-    private final int maxEventsToLoad = 100;
+    private int maxEventsToLoad = 100;
 }
