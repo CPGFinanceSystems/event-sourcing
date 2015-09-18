@@ -1,9 +1,6 @@
 package de.cpg.oss.verita.configuration.event_store;
 
 import akka.actor.ActorSystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.configuration.VeritaAutoConfiguration;
 import de.cpg.oss.verita.configuration.VeritaProperties;
@@ -13,13 +10,13 @@ import de.cpg.oss.verita.service.EventBus;
 import de.cpg.oss.verita.service.event_store.BusControllerImpl;
 import de.cpg.oss.verita.service.event_store.CommandBusImpl;
 import de.cpg.oss.verita.service.event_store.EventBusImpl;
+import de.cpg.oss.verita.service.event_store.EventStoreObjectMapper;
 import eventstore.Settings;
 import eventstore.UserCredentials;
 import eventstore.j.EsConnection;
 import eventstore.j.EsConnectionFactory;
 import eventstore.j.SettingsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -53,12 +50,9 @@ public class VeritaEventStoreAutoConfiguration {
         }
 
         @Bean
-        @Qualifier("veritaObjectMapper")
-        public ObjectMapper veritaObjectMapper() {
-            final ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JSR310Module());
-            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-            return objectMapper;
+        @ConditionalOnMissingBean
+        public EventStoreObjectMapper veritaObjectMapper() {
+            return new EventStoreObjectMapper();
         }
 
         @Bean
@@ -90,16 +84,14 @@ public class VeritaEventStoreAutoConfiguration {
         public EventBus eventBus(
                 final EsConnection esConnection,
                 final ActorSystem actorSystem,
-                @Qualifier("veritaObjectMapper")
-                final ObjectMapper objectMapper) {
+                final EventStoreObjectMapper objectMapper) {
             return new EventBusImpl(esConnection, actorSystem, objectMapper);
         }
 
         @Bean
         @ConditionalOnMissingBean
         public CommandBus commandBus(
-                @Qualifier("veritaObjectMapper")
-                final ObjectMapper objectMapper,
+                final EventStoreObjectMapper objectMapper,
                 final StringArgGenerator uuidGenerator,
                 final EsConnection esConnection) {
             return new CommandBusImpl(objectMapper, uuidGenerator, esConnection);

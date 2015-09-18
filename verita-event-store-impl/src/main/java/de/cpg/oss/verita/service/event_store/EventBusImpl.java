@@ -3,7 +3,6 @@ package de.cpg.oss.verita.service.event_store;
 import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import de.cpg.oss.verita.domain.AggregateRoot;
 import de.cpg.oss.verita.event.Event;
@@ -30,9 +29,12 @@ public class EventBusImpl extends AbstractEventBus {
 
     private final EsConnection esConnection;
     private final ActorSystem actorSystem;
-    private final ObjectMapper objectMapper;
+    private final EventStoreObjectMapper objectMapper;
 
-    public EventBusImpl(final EsConnection esConnection, final ActorSystem actorSystem, final ObjectMapper objectMapper) {
+    public EventBusImpl(
+            final EsConnection esConnection,
+            final ActorSystem actorSystem,
+            final EventStoreObjectMapper objectMapper) {
         this.esConnection = esConnection;
         this.actorSystem = actorSystem;
         this.objectMapper = objectMapper;
@@ -128,7 +130,7 @@ public class EventBusImpl extends AbstractEventBus {
     }
 
     private static <T extends Event> String streamIdOf(final Class<T> eventClass) {
-        return "$et-".concat(eventClass.getSimpleName());
+        return "$et-" .concat(eventClass.getSimpleName());
     }
 
     private <T extends Event> SubscriptionObserver<eventstore.Event> asSubscriptionObserver(final EventHandler<T> handler) {

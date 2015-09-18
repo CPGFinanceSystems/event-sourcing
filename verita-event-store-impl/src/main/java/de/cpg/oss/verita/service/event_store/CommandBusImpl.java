@@ -1,7 +1,6 @@
 package de.cpg.oss.verita.service.event_store;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.StringArgGenerator;
 import de.cpg.oss.verita.command.Command;
 import de.cpg.oss.verita.command.CommandHandler;
@@ -25,11 +24,11 @@ import java.util.UUID;
 @Slf4j
 public class CommandBusImpl implements CommandBus {
 
-    private final ObjectMapper objectMapper;
+    private final EventStoreObjectMapper objectMapper;
     private final StringArgGenerator uuidGenerator;
     private final EsConnection esConnection;
 
-    public CommandBusImpl(final ObjectMapper objectMapper, final StringArgGenerator uuidGenerator, final EsConnection esConnection) {
+    public CommandBusImpl(final EventStoreObjectMapper objectMapper, final StringArgGenerator uuidGenerator, final EsConnection esConnection) {
         this.objectMapper = objectMapper;
         this.uuidGenerator = uuidGenerator;
         this.esConnection = esConnection;

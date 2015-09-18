@@ -1,9 +1,6 @@
 package de.cpg.oss.verita.service.event_store;
 
 import akka.actor.ActorSystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import eventstore.UserCredentials;
 import eventstore.j.EsConnection;
 import eventstore.j.EsConnectionFactory;
@@ -15,7 +12,7 @@ public abstract class TestUtil {
 
     private static ActorSystem actorSystem;
     private static EsConnection esConnection;
-    private static ObjectMapper objectMapper;
+    private static EventStoreObjectMapper objectMapper;
 
     public static ActorSystem actorSystem() {
         return actorSystem;
@@ -25,7 +22,7 @@ public abstract class TestUtil {
         return esConnection;
     }
 
-    public static ObjectMapper objectMapper() {
+    public static EventStoreObjectMapper objectMapper() {
         return objectMapper;
     }
 
@@ -39,9 +36,7 @@ public abstract class TestUtil {
                         .defaultCredentials(new UserCredentials("admin", "changeit"))
                         .build());
 
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JSR310Module());
-        objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        objectMapper = new EventStoreObjectMapper();
     }
 
     public static void cleanup() {
