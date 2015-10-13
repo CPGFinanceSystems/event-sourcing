@@ -6,20 +6,21 @@ import de.cpg.oss.verita.event.Event;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Value
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = ToDoItemCreated.Builder.class)
-public class ToDoItemCreated implements Event {
+    public class ToDoItemCreated extends Event {
     private static final long serialVersionUID = 1L;
 
     private final UUID id;
     private final String description;
 
     @Override
-    public String uniqueKey() {
-        return id.toString();
+    public Optional<String> uniqueKey() {
+        return Optional.of(id.toString());
     }
 
     @JsonPOJOBuilder(withPrefix = "")

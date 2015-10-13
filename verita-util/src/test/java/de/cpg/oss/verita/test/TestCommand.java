@@ -11,15 +11,8 @@ import lombok.Value;
 @AllArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = TestCommand.Builder.class)
-public class TestCommand implements Command {
+public class TestCommand extends Command {
     private static final long serialVersionUID = 1L;
-
-    private final String uniqueKey;
-
-    @Override
-    public String uniqueKey() {
-        return uniqueKey;
-    }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {

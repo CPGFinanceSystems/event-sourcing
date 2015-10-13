@@ -28,7 +28,7 @@ public class CommandBusImpl implements CommandBus {
 
     @Override
     public Optional<UUID> publish(final Command command) {
-        final UUID commandId = uuidGenerator.generate(command.uniqueKey());
+        final UUID commandId = command.uniqueKey().map(uuidGenerator::generate).orElse(UUID.randomUUID());
         final String key = command.getClass().getSimpleName();
 
         streams.putIfAbsent(key, new ArrayList<>());

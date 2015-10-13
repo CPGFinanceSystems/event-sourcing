@@ -1,6 +1,7 @@
 package de.cpg.oss.verita.event;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -11,7 +12,9 @@ import java.util.UUID;
  * something which happened already in the past. Events can only be 'deleted' or 'undone' if another event with the
  * logical reverse operation is applied (for example this could be a <code>UserDeletedEvent</code>).
  */
-public interface Event extends Serializable {
+public abstract class Event implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * Supply a unique logical identifier - for example in a <code>CreatedUserEvent</code> this could be the user's
@@ -19,5 +22,7 @@ public interface Event extends Serializable {
      *
      * @return A unique logical identifier for this event
      */
-    String uniqueKey();
+    public Optional<String> uniqueKey() {
+        return Optional.empty();
+    }
 }

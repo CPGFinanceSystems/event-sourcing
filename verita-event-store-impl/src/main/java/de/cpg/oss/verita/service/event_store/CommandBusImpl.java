@@ -45,7 +45,9 @@ public class CommandBusImpl implements CommandBus {
             return Optional.empty();
         }
 
-        final UUID commandId = uuidGenerator.generate(commandName.concat("-").concat(command.uniqueKey()));
+        final UUID commandId = command.uniqueKey()
+                .map((uniqueKey) -> uuidGenerator.generate(commandName.concat("-").concat(uniqueKey)))
+                .orElse(UUID.randomUUID());
         log.debug("Generated UUID {} for {}", commandId, commandName);
         final EventData eventData = new EventDataBuilder(commandName)
                 .jsonData(jsonCommand)

@@ -35,7 +35,7 @@ public class SubscriptionStateAggregate implements SubscriptionState, AggregateR
         if (event instanceof SubscriptionCreated) {
             final SubscriptionCreated createEvent = (SubscriptionCreated) event;
             this.id = createEvent.getId();
-            this.name = createEvent.uniqueKey();
+            this.name = createEvent.uniqueKey().get();
         } else if (event instanceof SubscriptionUpdated) {
             final SubscriptionUpdated updateEvent = (SubscriptionUpdated) event;
             sequenceNumberToEventIdMap.put(updateEvent.getSequenceNumber(), updateEvent.getEventId());

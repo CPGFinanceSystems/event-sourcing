@@ -5,20 +5,21 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Value
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = SubscriptionUpdated.Builder.class)
-public class SubscriptionUpdated implements Event {
+public class SubscriptionUpdated extends Event {
     private static final long serialVersionUID = 1L;
 
     private final UUID eventId;
     private final int sequenceNumber;
 
     @Override
-    public String uniqueKey() {
-        return eventId.toString();
+    public Optional<String> uniqueKey() {
+        return Optional.of(eventId.toString());
     }
 
     @JsonPOJOBuilder(withPrefix = "")

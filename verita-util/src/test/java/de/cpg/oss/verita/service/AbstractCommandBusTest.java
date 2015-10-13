@@ -26,7 +26,7 @@ public abstract class AbstractCommandBusTest {
 
     @Test
     public void testPublishCommandWithSameUniqueKeyShouldReturnOptionalEmpty() {
-        final TestCommand command = new TestCommand(UUID.randomUUID().toString());
+        final TestCommand command = new TestCommand();
 
         assertThat(commandBus().publish(command)).isPresent();
         assertThat(commandBus().publish(command)).isEmpty();
@@ -35,13 +35,11 @@ public abstract class AbstractCommandBusTest {
     @Test
     public void testPublishAndSubscribe() throws Exception {
         final AtomicBoolean condition = new AtomicBoolean();
-        final String uniqueKey = UUID.randomUUID().toString();
 
         final CommandHandler<TestCommand> commandHandler = new AbstractCommandHandler<TestCommand>(TestCommand.class) {
 
             @Override
             public void handle(final TestCommand command, final UUID commandId, final int sequenceNumber) throws Exception {
-                assertThat(command.uniqueKey()).isEqualTo(uniqueKey);
                 assertThat(commandId).isNotNull();
                 assertThat(sequenceNumber).isGreaterThanOrEqualTo(0);
                 synchronized (condition) {
@@ -58,7 +56,7 @@ public abstract class AbstractCommandBusTest {
 
 
         try (Closeable ignored = commandBus().subscribeTo(commandHandler)) {
-            final Command command = new TestCommand(uniqueKey);
+            final Command command = new TestCommand();
             final Optional<UUID> commandId = commandBus().publish(command);
             assertThat(commandId).isPresent();
 

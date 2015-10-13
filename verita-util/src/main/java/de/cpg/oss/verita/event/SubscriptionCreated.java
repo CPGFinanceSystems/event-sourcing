@@ -5,12 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Value
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = SubscriptionCreated.Builder.class)
-public class SubscriptionCreated implements Event {
+public class SubscriptionCreated extends Event {
     private static final long serialVersionUID = 1L;
 
     private final UUID id;
@@ -22,8 +23,8 @@ public class SubscriptionCreated implements Event {
     }
 
     @Override
-    public String uniqueKey() {
-        return subscriptionNameOf(applicationId, eventClassName);
+    public Optional<String> uniqueKey() {
+        return Optional.of(subscriptionNameOf(applicationId, eventClassName));
     }
 
     @JsonPOJOBuilder(withPrefix = "")

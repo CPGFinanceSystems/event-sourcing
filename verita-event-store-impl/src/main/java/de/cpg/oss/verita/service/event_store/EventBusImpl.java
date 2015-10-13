@@ -56,8 +56,10 @@ public class EventBusImpl extends AbstractEventBus {
         }
 
         final String eventType = event.getClass().getSimpleName();
-        final UUID eventId = Generators.nameBasedGenerator(aggregateRoot.id())
-                .generate(eventType.concat("-").concat(event.uniqueKey()));
+        final UUID eventId = event.uniqueKey()
+                .map((uniqueKey) -> Generators.nameBasedGenerator(aggregateRoot.id())
+                        .generate(eventType.concat("-").concat(uniqueKey)))
+                .orElse(UUID.randomUUID());
         log.debug("Generated UUID {} for {}", eventId, eventType);
 
         final EventData eventData = new EventDataBuilder(eventType)
