@@ -26,7 +26,7 @@ public abstract class AbstractCommandBusTest {
 
     @Test
     public void testPublishCommandWithSameUniqueKeyShouldReturnOptionalEmpty() {
-        final TestCommand command = new TestCommand();
+        final TestCommand command = new TestCommand(UUID.randomUUID().toString());
 
         assertThat(commandBus().publish(command)).isPresent();
         assertThat(commandBus().publish(command)).isEmpty();
@@ -56,7 +56,7 @@ public abstract class AbstractCommandBusTest {
 
 
         try (Closeable ignored = commandBus().subscribeTo(commandHandler)) {
-            final Command command = new TestCommand();
+            final Command command = new TestCommand(UUID.randomUUID().toString());
             final Optional<UUID> commandId = commandBus().publish(command);
             assertThat(commandId).isPresent();
 
